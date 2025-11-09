@@ -16,8 +16,8 @@ function App() {
         justifyContent: 'center',
       }}
     >
-      <Box sx={{ height: '100%', width: '100%' }}>
-        <GprToolbar></GprToolbar>
+      <GprToolbar></GprToolbar>
+      <Box sx={{ width: '100%', height: 'calc(100% - 4em)' }}>
         <Bscan rotated={true}></Bscan>
       </Box>
     </Box>

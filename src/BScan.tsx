@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
-import Plot from 'react-plotly.js';
+import createPlotlyComponent from 'react-plotly.js/factory';
+import Plotly from 'plotly.js-dist-min';
+const Plot = createPlotlyComponent(Plotly);
 import useBscanStore from './stores/bscan-store';
 
 const transpose = <T,>(m: T[][]): T[][] => {
@@ -23,12 +25,14 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   );
 
   return (
-    <div style={{ width: '100%', height: '80%', border: '1px solid #a00' }}>
+    <div style={{ width: '100%', height: '100%' }}>
       <Plot
         data={[
           {
             z: zView,
             type: 'heatmap',
+            colorscale: 'Jet',
+            showscale: false,
           } as Partial<Plotly.PlotData>,
         ]}
         layout={{
