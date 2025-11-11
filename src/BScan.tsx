@@ -11,6 +11,8 @@ const transpose = <T,>(m: T[][]): T[][] =>
 
 export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   const bscan = useBscanStore((s) => s.bscan);
+  const dx = useBscanStore((s) => s.dx);
+  const dt = useBscanStore((s) => s.dt);
 
   const z = useMemo(
     () => (rotated ? transpose(bscan) : bscan),
@@ -43,11 +45,27 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   const x = useMemo(() => Array.from({ length: cols }, (_, i) => i), [cols]);
   const y = useMemo(() => Array.from({ length: rows }, (_, i) => i), [rows]);
 
+  const everyX = 10;
+  const xTickVals = [];
+  const xTickText = [];
+  for (let i = 0; i < cols; i += everyX) {
+    xTickVals.push(i);
+    xTickText.push((i * dx).toFixed(0));
+  }
+
+  const everyY = 10;
+  const yTickVals = [];
+  const yTickText = [];
+  for (let i = 0; i < rows; i += everyY) {
+    yTickVals.push(i);
+    yTickText.push((i * dt).toFixed(0));
+  }
+
   return (
     <div
       ref={hostRef}
       style={{
-        width: '100%',
+        width: 'calc(100% - 15em)',
         height: '100%',
         overflowX: 'auto',
         overflowY: 'hidden',
@@ -80,6 +98,9 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
               title: { text: rotated ? 'Длина' : 'Время', standoff: 8 },
               // optional: start from the leftmost visible “viewport” equal to host width
               // range: [0, Math.ceil((plotW - m.l - m.r) / cellPx)],
+              tickmode: 'array',
+              tickvals: xTickVals,
+              ticktext: xTickText,
             },
             yaxis: {
               domain: [0, 1],
@@ -87,6 +108,9 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
               constrain: 'domain',
               ticks: 'outside',
               title: { text: rotated ? 'Время' : 'Глубина', standoff: 8 },
+              tickmode: 'array',
+              tickvals: yTickVals,
+              ticktext: yTickText,
             },
             uirevision: 'keep',
           }}

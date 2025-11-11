@@ -2,6 +2,7 @@ import './App.css';
 import GprToolbar from './GprToolbar';
 import { Box } from '@mui/material';
 import Bscan from './BScan';
+import DataSettings from './DataSettings';
 
 function App() {
   return (
@@ -17,7 +18,16 @@ function App() {
       }}
     >
       <GprToolbar></GprToolbar>
-      <Box sx={{ width: '100%', height: 'calc(100% - 4em)' }}>
+      <Box
+        sx={{
+          width: '100%',
+          height: 'calc(100% - 4em)',
+          display: 'flex',
+          flexDirection: 'row',
+          background: '#fff',
+        }}
+      >
+        <DataSettings></DataSettings>
         <Bscan rotated={true}></Bscan>
       </Box>
     </Box>
