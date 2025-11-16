@@ -37,18 +37,6 @@ export default function Bscand3({ rotated = false }: { rotated?: boolean }) {
   const getChartHeight = (): number =>
     Math.max(0, size.height - chartMargin.top - chartMargin.bottom);
 
-  // const domain = useMemo<[number, number]>(() => {
-  //   if (!rows || !cols) return [0, 1];
-  //   const flat = new Float64Array(rows * cols);
-  //   let k = 0;
-  //   for (let y = 0; y < rows; y++)
-  //     for (let x = 0; x < cols; x++) flat[k++] = z[y][x];
-  //   const sorted = Array.from(flat).sort((a, b) => a - b);
-  //   const q1 = d3.quantileSorted(sorted, 0.01) ?? 0;
-  //   const q9 = d3.quantileSorted(sorted, 0.99) ?? 1;
-  //   const m = Math.max(Math.abs(q1), Math.abs(q9));
-  //   return [-m, m || 1];
-  // }, [z, rows, cols]);
   const domain = useMemo<[number, number]>(() => {
     const minmaxes = bscan.map((ascan) => ({
       min: Math.min(...ascan),

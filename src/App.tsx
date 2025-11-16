@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 import Bscan from './BScan';
 import DataSettings from './DataSettings';
 import Bscand3 from './Bscand3';
+import BscanCanvas from './BscanCanvas';
 
 function App() {
   return (
@@ -29,7 +30,7 @@ function App() {
         }}
       >
         <DataSettings></DataSettings>
-        <Bscand3 rotated={true}></Bscand3>
+        <BscanCanvas rotated={true}></BscanCanvas>
       </Box>
     </Box>
   );
