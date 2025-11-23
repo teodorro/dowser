@@ -65,7 +65,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     <div
       ref={hostRef}
       style={{
-        width: 'calc(100% - 15em)',
+        width: 'calc(100% - 35em)',
         height: '100%',
         overflowX: 'auto',
         overflowY: 'hidden',

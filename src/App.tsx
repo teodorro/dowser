@@ -3,6 +3,7 @@ import GprToolbar from './GprToolbar';
 import { Box } from '@mui/material';
 import Bscan from './BScan';
 import DataSettings from './DataSettings';
+import Ascan from './Ascan';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
       >
         <DataSettings></DataSettings>
         <Bscan rotated={true}></Bscan>
+        <Ascan></Ascan>
       </Box>
     </Box>
   );
