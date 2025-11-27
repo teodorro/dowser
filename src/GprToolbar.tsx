@@ -10,6 +10,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { DarkMode, FolderOpen } from '@mui/icons-material';
 import { readKrotTxtFile } from './read-file/read-krot-txt-file';
 import useBscanStore from './stores/bscan-store';
+import { readGeoFile } from './read-file/read-geo-file';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -30,20 +31,52 @@ export default function GprToolbar() {
     const files = e.target.files;
     if (files == null || files.length === 0) return;
     const file = files[0];
+    if (!file) return;
+    const extension = file.name.split('.')[file.name.split('.').length - 1];
     console.log(file);
+    switch (extension) {
+      case 'txt':
+        loadTxtFile(file);
+        break;
+      case 'geo':
+        loadGeoFile(file);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const loadTxtFile = async (file: File) => {
     try {
       if (file.size > 5 * 1024 * 1024) {
         console.warn('File is large; consider streaming.');
       }
 
-      const raw = await file.text(); // <-- simplest way
+      const raw = await file.text();
       const krotdata = readKrotTxtFile(raw);
       bscanStore.setBscan(krotdata);
     } catch (err) {
       console.error('Failed to read file:', err);
-    } finally {
-      e.target.value = ''; // allow re-selecting the same file later
     }
+  };
+
+  const loadGeoFile = async (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const buffer = reader.result as ArrayBuffer; // FileReader gives ArrayBuffer here
+      const uint8 = new Uint8Array(buffer);
+      const data = readGeoFile(uint8);
+      bscanStore.setBscan(data);
+    };
+
+    reader.onerror = () => {
+      // setError('Failed to read file');
+      bscanStore.setBscan([]);
+    };
+
+    // Important: for binary we use ArrayBuffer
+    reader.readAsArrayBuffer(file);
   };
 
   return (
