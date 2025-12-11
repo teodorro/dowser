@@ -8,9 +8,10 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { DarkMode, FolderOpen } from '@mui/icons-material';
-import { readKrotTxtFile } from './read-file/read-krot-txt-file';
-import useBscanStore from './stores/bscan-store';
-import { readGeoFile } from './read-file/read-geo-file';
+import { readKrotTxtFile } from '../read-file/read-krot-txt-file';
+import useBscanStore from '../stores/bscan-store';
+import { readGeoFile } from '../read-file/read-geo-file';
+import { readGemFile } from '../read-file/read-gem-file';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -40,6 +41,9 @@ export default function GprToolbar() {
         break;
       case 'geo':
         loadGeoFile(file);
+        break;
+      case 'gem':
+        loadGemFile(file);
         break;
       default:
         break;
@@ -75,7 +79,24 @@ export default function GprToolbar() {
       bscanStore.setBscan([]);
     };
 
-    // Important: for binary we use ArrayBuffer
+    reader.readAsArrayBuffer(file);
+  };
+
+  const loadGemFile = async (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const buffer = reader.result as ArrayBuffer; // FileReader gives ArrayBuffer here
+      const uint8 = new Uint8Array(buffer);
+      const data = readGemFile(uint8);
+      bscanStore.setBscan(data);
+    };
+
+    reader.onerror = () => {
+      // setError('Failed to read file');
+      bscanStore.setBscan([]);
+    };
+
     reader.readAsArrayBuffer(file);
   };
 

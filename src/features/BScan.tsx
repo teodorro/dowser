@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import Plotly from 'plotly.js-dist-min';
 const Plot = createPlotlyComponent(Plotly);
-import useBscanStore from './stores/bscan-store';
+import useBscanStore from '../stores/bscan-store';
 
 const transpose = <T,>(m: T[][]): T[][] =>
   m.length
@@ -39,6 +39,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
 
   const cellPx = rows ? (hostH - m.t - m.b) / rows : 8;
 
+  // const plotW = Math.max(200, Math.floor(cellPx * cols + m.l + m.r));
   const plotW = Math.max(200, Math.floor(cellPx * cols + m.l + m.r));
   const plotH = hostH;
 
@@ -71,7 +72,15 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
         overflowY: 'hidden',
       }}
     >
-      <div style={{ width: plotW, height: plotH }}>
+      <div
+        style={{
+          width: plotW,
+          // width: 'max(var(--plotW), calc(100%))',
+          height: plotH,
+          // margin: '0.5em',
+          // border: '1px solid #a00',
+        }}
+      >
         <Plot
           data={[
             {
@@ -86,6 +95,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
           ]}
           layout={{
             width: plotW,
+            // width: Math.max(plotW, hostRef.current?.clientWidth),
             height: plotH,
             dragmode: 'pan',
             margin: m,

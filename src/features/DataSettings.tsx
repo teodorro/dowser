@@ -1,6 +1,6 @@
 import { Box, TextField } from '@mui/material';
 import React from 'react';
-import useBscanStore from './stores/bscan-store';
+import useBscanStore from '../stores/bscan-store';
 
 export default function DataSettings() {
   const d = useBscanStore((s) => s.d);

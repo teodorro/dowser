@@ -14,6 +14,9 @@ export const readKrotTxtFile = (raw: string): number[][] => {
     if (data.length === cell.n) data.push([]);
     data[cell.n][cell.t] = cell.a;
   });
+  const x = data.flat();
+  const y = new Set(x);
+  const z = [...y].sort((a, b) => a - b);
   return data;
 };
 

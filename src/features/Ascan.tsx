@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import useBscanStore from './stores/bscan-store';
+import useBscanStore from '../stores/bscan-store';
 import * as echarts from 'echarts/core';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import { Box } from '@mui/material';

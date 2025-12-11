@@ -1,9 +1,9 @@
 import './App.css';
-import GprToolbar from './GprToolbar';
+import GprToolbar from './features/GprToolbar';
 import { Box } from '@mui/material';
-import Bscan from './BScan';
-import DataSettings from './DataSettings';
-import Ascan from './Ascan';
+import Bscan from './features/BScan';
+import DataSettings from './features/DataSettings';
+import Ascan from './features/Ascan';
 
 function App() {
   return (

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 interface IBscanStore {
+  // rawBscan: number[][]
   bscan: number[][];
   d: number;
   dx: number;

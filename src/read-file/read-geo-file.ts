@@ -1,3 +1,5 @@
+import { convertInd2Amp } from './convert-ind-2-amp';
+
 export const readGeoFile = (raw: Uint8Array): number[][] => {
   const bscanLengthArray = Array.from(raw.slice(13, 16));
   const bscanLength =
@@ -37,6 +39,11 @@ export const readGeoFile = (raw: Uint8Array): number[][] => {
       index + ascanHeaderLength + ascanDataLength
     );
     bscan.push(Array.from(ascan));
+  });
+  bscan.forEach((ascan) => {
+    for (let i = 0; i < ascan.length; i++) {
+      ascan[i] = convertInd2Amp(ascan[i]);
+    }
   });
   return bscan;
 };
