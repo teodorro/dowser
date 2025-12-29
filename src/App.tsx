@@ -2,8 +2,8 @@ import './App.css';
 import GprToolbar from './features/GprToolbar';
 import { Box } from '@mui/material';
 import Bscan from './features/BScan';
-import DataSettings from './features/DataSettings';
 import Ascan from './features/Ascan';
+import Settings from './features/Settings';
 
 function App() {
   return (
@@ -28,7 +28,7 @@ function App() {
           background: '#fff',
         }}
       >
-        <DataSettings></DataSettings>
+        <Settings></Settings>
         <Bscan rotated={true}></Bscan>
         <Ascan></Ascan>
       </Box>

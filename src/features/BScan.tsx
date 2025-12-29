@@ -1,8 +1,15 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import Plotly from 'plotly.js-dist-min';
 const Plot = createPlotlyComponent(Plotly);
 import useBscanStore from '../stores/bscan-store';
+import useDataProcessorStore from '../stores/data-processor-store';
 
 const transpose = <T,>(m: T[][]): T[][] =>
   m.length
@@ -10,20 +17,28 @@ const transpose = <T,>(m: T[][]): T[][] =>
     : [];
 
 export default function Bscan({ rotated = false }: { rotated?: boolean }) {
-  const bscan = useBscanStore((s) => s.bscan);
-  const dx = useBscanStore((s) => s.dx);
-  const dt = useBscanStore((s) => s.dt);
+  const m = { t: 36, r: 12, b: 36, l: 56 };
+
+  const bscan = useBscanStore.use.bscan();
+  const fullAmpBscan = useBscanStore.use.fullAmpBscan();
+  const dx = useBscanStore.use.dx();
+  const dt = useBscanStore.use.dt();
+
+  const setBscan = useBscanStore.use.setBscan();
+  const setAscanInd = useBscanStore.use.setAscanInd();
+
+  const operations = useDataProcessorStore.use.operations();
 
   const z = useMemo(
     () => (rotated ? transpose(bscan) : bscan),
     [bscan, rotated]
   );
 
-  const rows = z.length || 0;
-  const cols = rows ? z[0].length : 0;
-
   const hostRef = useRef<HTMLDivElement>(null);
   const [hostH, setHostH] = useState(400);
+  const rows = z.length || 0;
+  const cols = rows ? z[0].length : 0;
+  const cellPx = rows ? (hostH - m.t - m.b) / rows : 8;
 
   useLayoutEffect(() => {
     if (!hostRef.current) return;
@@ -34,10 +49,6 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     ro.observe(hostRef.current);
     return () => ro.disconnect();
   }, []);
-
-  const m = { t: 36, r: 12, b: 36, l: 56 };
-
-  const cellPx = rows ? (hostH - m.t - m.b) / rows : 8;
 
   // const plotW = Math.max(200, Math.floor(cellPx * cols + m.l + m.r));
   const plotW = Math.max(200, Math.floor(cellPx * cols + m.l + m.r));
@@ -61,6 +72,24 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     yTickVals.push(i);
     yTickText.push((i * dt).toFixed(0));
   }
+
+  useEffect(() => {
+    let data = fullAmpBscan;
+    operations.forEach((operation) => {
+      data = operation(data);
+    });
+    setBscan(data);
+  }, [fullAmpBscan, operations]);
+
+  const onHover = (event: Readonly<Plotly.PlotHoverEvent>) => {
+    const inds = event.xvals;
+    if (inds != null && inds.length > 0) {
+      let ind = Number.parseInt((inds[0] as number).toFixed(0));
+      ind = Math.max(0, ind);
+      ind = Math.min(ind, bscan.length - 1);
+      setAscanInd(ind);
+    }
+  };
 
   return (
     <div
@@ -132,6 +161,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
           }}
           style={{ width: '100%', height: '100%' }}
           useResizeHandler={false}
+          onHover={onHover}
         />
       </div>
     </div>

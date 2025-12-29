@@ -26,19 +26,31 @@ echarts.use([
 ]);
 
 export default function Ascan() {
-  const bscan = useBscanStore((s) => s.bscan);
+  const bscan = useBscanStore.use.bscan();
+  const ascanInd = useBscanStore.use.ascanInd();
+
+  const minBscan = useMemo(
+    () => Math.min(...bscan.map((x) => Math.min(...x))),
+    [bscan]
+  );
+
+  const maxBscan = useMemo(
+    () => Math.max(...bscan.map((x) => Math.max(...x))),
+    [bscan]
+  );
 
   const data = useMemo(() => {
     if (!bscan.length) return [];
-    const a = [...bscan[0].entries()].map(([idx, val]) => [
+    console.log(minBscan, maxBscan);
+    const a = [...bscan[ascanInd].entries()].map(([idx, val]) => [
       val,
-      bscan[0].length - idx - 1,
+      bscan[ascanInd].length - idx - 1,
     ]);
     return a;
-  }, [bscan]);
+  }, [bscan, ascanInd]);
 
   const yLabels = useMemo(
-    () => (bscan.length ? bscan[0].map((_, idx) => idx).reverse() : []),
+    () => (bscan.length ? bscan[ascanInd].map((_, idx) => idx).reverse() : []),
     [bscan]
   );
 
@@ -62,7 +74,9 @@ export default function Ascan() {
       },
       xAxis: {
         type: 'value',
-        boundaryGap: [0, '100%'],
+        boundaryGap: false,
+        min: minBscan,
+        max: maxBscan,
       },
       yAxis: {
         type: 'category',
