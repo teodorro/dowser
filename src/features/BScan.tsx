@@ -23,6 +23,8 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   const fullAmpBscan = useBscanStore.use.fullAmpBscan();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
+  const velocity = useBscanStore.use.velocity();
+  const selectedYAxis = useBscanStore.use.selectedYAxis();
 
   const setBscan = useBscanStore.use.setBscan();
   const setAscanInd = useBscanStore.use.setAscanInd();
@@ -36,6 +38,9 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
 
   const hostRef = useRef<HTMLDivElement>(null);
   const [hostH, setHostH] = useState(400);
+  const [yTickVals, setYTickVals] = useState<number[]>([]);
+  const [yTickText, setYTickText] = useState<string[]>([]);
+
   const rows = z.length || 0;
   const cols = rows ? z[0].length : 0;
   const cellPx = rows ? (hostH - m.t - m.b) / rows : 8;
@@ -50,7 +55,6 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     return () => ro.disconnect();
   }, []);
 
-  // const plotW = Math.max(200, Math.floor(cellPx * cols + m.l + m.r));
   const plotW = Math.max(200, Math.floor(cellPx * cols + m.l + m.r));
   const plotH = hostH;
 
@@ -65,13 +69,30 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     xTickText.push((i * dx).toFixed(0));
   }
 
-  const everyY = 10;
-  const yTickVals = [];
-  const yTickText = [];
-  for (let i = 0; i < rows; i += everyY) {
-    yTickVals.push(i);
-    yTickText.push((i * dt).toFixed(0));
-  }
+  useEffect(() => {
+    const vals: number[] = [];
+    const text: string[] = [];
+    if (selectedYAxis === 'time') {
+      for (let i = 0; i < rows; i += 10) {
+        const val = Number.parseFloat((i * dt).toFixed(1));
+        vals.push(i);
+        text.push(val.toString());
+      }
+      setYTickVals(vals);
+      setYTickText(text);
+    } else if (selectedYAxis === 'depth') {
+      for (let d = 0; ; d += 1) {
+        const i = Number.parseFloat((d / dt / velocity).toFixed(0));
+        if (vals.every((x) => x !== i && x + 9 < i)) {
+          vals.push(i);
+          text.push(d.toString());
+        }
+        if (i > rows) break;
+      }
+      setYTickVals(vals);
+      setYTickText(text);
+    }
+  }, [bscan, selectedYAxis, velocity]);
 
   useEffect(() => {
     let data = fullAmpBscan;

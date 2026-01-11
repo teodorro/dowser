@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
 import * as echarts from 'echarts/core';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
@@ -28,6 +28,11 @@ echarts.use([
 export default function Ascan() {
   const bscan = useBscanStore.use.bscan();
   const ascanInd = useBscanStore.use.ascanInd();
+  const selectedYAxis = useBscanStore.use.selectedYAxis();
+  const velocity = useBscanStore.use.velocity();
+  const dt = useBscanStore.use.dt();
+
+  const [yLabels, setYLabels] = useState<number[]>([]);
 
   const minBscan = useMemo(
     () => Math.min(...bscan.map((x) => Math.min(...x))),
@@ -41,7 +46,6 @@ export default function Ascan() {
 
   const data = useMemo(() => {
     if (!bscan.length) return [];
-    console.log(minBscan, maxBscan);
     const a = [...bscan[ascanInd].entries()].map(([idx, val]) => [
       val,
       bscan[ascanInd].length - idx - 1,
@@ -49,10 +53,44 @@ export default function Ascan() {
     return a;
   }, [bscan, ascanInd]);
 
-  const yLabels = useMemo(
-    () => (bscan.length ? bscan[ascanInd].map((_, idx) => idx).reverse() : []),
-    [bscan]
-  );
+  // const yLabels = useMemo(
+  //   () =>
+  //     bscan.length
+  //       ? bscan[ascanInd]
+  //           .map((_, idx) => Number.parseFloat(idx.toFixed(2)))
+  //           .reverse()
+  //       : [],
+  //   [bscan, selectedYAxis, velocity]
+  // );
+
+  useEffect(() => {
+    if (bscan.length === 0) {
+      setYLabels([]);
+    } else if (selectedYAxis === 'time') {
+      const labels = bscan[ascanInd]
+        .map((_, idx) => Number.parseFloat(idx.toFixed(2)) * dt)
+        .reverse();
+      setYLabels(labels);
+    } else if (selectedYAxis === 'depth') {
+      // const vals: number[] = [];
+      // const text: number[] = [];
+      // for (let d = 0; ; d += 1) {
+      //   const i = Number.parseFloat((d / dt / velocity).toFixed(0));
+      //   if (vals.every((x) => x !== i && x + 9 < i)) {
+      //     vals.push(i);
+      //     text.push(d);
+      //   }
+      //   if (i > bscan[ascanInd].length) break;
+      // }
+      // setYLabels(text.reverse());
+      const labels = bscan[ascanInd]
+        .map((_, idx) => Number.parseFloat((idx * dt * velocity).toFixed(1)))
+        .reverse();
+      setYLabels(labels);
+    } else {
+      setYLabels([]);
+    }
+  }, [bscan, selectedYAxis, velocity]);
 
   const option = useMemo<echarts.EChartsCoreOption>(() => {
     return {
@@ -102,18 +140,6 @@ export default function Ascan() {
           itemStyle: {
             color: '#444',
           },
-          // areaStyle: {
-          //   color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          //     {
-          //       offset: 0,
-          //       color: 'rgb(255, 158, 68)',
-          //     },
-          //     {
-          //       offset: 1,
-          //       color: 'rgb(255, 70, 131)',
-          //     },
-          //   ]),
-          // },
           data,
         },
       ],

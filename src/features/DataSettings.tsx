@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, TextField } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import useBscanStore from '../stores/bscan-store';
+import { Height } from '@mui/icons-material';
 
 export default function DataSettings() {
   const speedLight = 0.3;
@@ -9,11 +10,14 @@ export default function DataSettings() {
   const dt = useBscanStore.use.dt();
   const eps = useBscanStore.use.eps();
   const velocity = useBscanStore.use.velocity();
+  const selectedYAxis = useBscanStore.use.selectedYAxis();
+
   const setD = useBscanStore.use.setD();
   const setDx = useBscanStore.use.setDx();
   const setDt = useBscanStore.use.setDt();
   const setEps = useBscanStore.use.setEps();
   const setVelocity = useBscanStore.use.setVelocity();
+  const setSelectedYAxis = useBscanStore.use.setSelectedYAxis();
 
   const onPermittivityChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -92,6 +96,16 @@ export default function DataSettings() {
         onChange={onVelocityChange}
         sx={{ display: 'flex', margin: '0.5em' }}
       />
+
+      <Button
+        variant="outlined"
+        startIcon={<Height />}
+        onClick={() => {
+          setSelectedYAxis(selectedYAxis === 'time' ? 'depth' : 'time');
+        }}
+      >
+        {selectedYAxis === 'time' ? 'Глубина' : 'Время'}
+      </Button>
     </Box>
   );
 }

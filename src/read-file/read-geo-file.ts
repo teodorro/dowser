@@ -40,10 +40,16 @@ export const readGeoFile = (raw: Uint8Array): number[][] => {
     );
     bscan.push(Array.from(ascan));
   });
+
+  convertIndicesToAmplitudes(bscan);
+
+  return bscan;
+};
+
+const convertIndicesToAmplitudes = (bscan: number[][]) => {
   bscan.forEach((ascan) => {
     for (let i = 0; i < ascan.length; i++) {
       ascan[i] = convertInd2Amp(ascan[i]);
     }
   });
-  return bscan;
 };
