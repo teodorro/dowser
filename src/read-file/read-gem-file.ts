@@ -10,7 +10,7 @@ export const readGemFile = (raw: Uint8Array): number[][] => {
   for (let i = 0; i < bscanLength; i++) {
     const ascan = raw.slice(
       514 + i * ascanLength,
-      514 + i * ascanLength + ascanDataLength
+      514 + i * ascanLength + ascanDataLength,
     );
     bscan.push(Array.from(ascan));
   }
@@ -21,6 +21,7 @@ export const readGemFile = (raw: Uint8Array): number[][] => {
   // const z = [...y].sort((a, b) => a - b);
   // const maxValue = Math.max(...bscan.map((x) => Math.max(...x)));
 
+  getRidOfEmptyAscans(bscan);
   getRidOfTwoStepKrotFormat(bscan);
   convertIndicesToAmplitudes(bscan);
 
@@ -41,4 +42,12 @@ const convertIndicesToAmplitudes = (bscan: number[][]) => {
       ascan[i] = convertInd2Amp(ascan[i]);
     }
   });
+};
+
+const getRidOfEmptyAscans = (bscan: number[][]) => {
+  const filteredBscan = bscan.filter((ascan) => {
+    return ascan.some((value) => value !== 0);
+  });
+  bscan.length = 0;
+  bscan.push(...filteredBscan);
 };

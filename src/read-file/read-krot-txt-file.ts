@@ -16,9 +16,9 @@ export const readKrotTxtFile = (raw: string): number[][] => {
     if (data.length === cell.n) data.push([]);
     data[cell.n][cell.t] = cell.a;
   });
-  const x = data.flat();
-  const y = new Set(x);
-  const z = [...y].sort((a, b) => a - b);
+  // const x = data.flat();
+  // const y = new Set(x);
+  // const z = [...y].sort((a, b) => a - b);
   const maxValue = Math.max(...data.map((x) => Math.max(...x)));
   const minValue = Math.min(...data.map((x) => Math.min(...x)));
 
@@ -59,7 +59,7 @@ const getRidOfTwoStepKrotFormat = (bscan: number[][]) => {
 };
 
 export const removeEmptyAscans = (
-  cells: { n: number; t: number; a: number }[]
+  cells: { n: number; t: number; a: number }[],
 ): { n: number; t: number; a: number }[] => {
   const ns = [...new Set(cells.map((cell) => cell.n))];
   const nsSums = ns
@@ -73,7 +73,7 @@ export const removeEmptyAscans = (
     }))
     .filter((x) => x.sum > 0);
   const notZeroCells = cells.filter((cell) =>
-    nsSums.some((ns) => ns.n === cell.n)
+    nsSums.some((ns) => ns.n === cell.n),
   );
   return notZeroCells;
 };
