@@ -1,15 +1,9 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import createPlotlyComponent from 'react-plotly.js/factory';
-import Plotly from 'plotly.js-dist-min';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import createPlotlyComponent from "react-plotly.js/factory";
+import Plotly from "plotly.js-dist-min";
 const Plot = createPlotlyComponent(Plotly);
-import useBscanStore from '../stores/bscan-store';
-import useDataProcessorStore from '../stores/data-processor-store';
+import useBscanStore from "../stores/bscan-store";
+import useDataProcessorStore from "../stores/data-processor-store";
 
 const transpose = <T,>(m: T[][]): T[][] =>
   m.length
@@ -33,7 +27,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
 
   const z = useMemo(
     () => (rotated ? transpose(bscan) : bscan),
-    [bscan, rotated]
+    [bscan, rotated],
   );
 
   const hostRef = useRef<HTMLDivElement>(null);
@@ -72,7 +66,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   useEffect(() => {
     const vals: number[] = [];
     const text: string[] = [];
-    if (selectedYAxis === 'time') {
+    if (selectedYAxis === "time") {
       for (let i = 0; i < rows; i += 10) {
         const val = Number.parseFloat((i * dt).toFixed(1));
         vals.push(i);
@@ -80,7 +74,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
       }
       setYTickVals(vals);
       setYTickText(text);
-    } else if (selectedYAxis === 'depth') {
+    } else if (selectedYAxis === "depth") {
       for (let d = 0; ; d += 1) {
         const i = Number.parseFloat((d / dt / velocity).toFixed(0));
         if (vals.every((x) => x !== i && x + 9 < i)) {
@@ -116,10 +110,10 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     <div
       ref={hostRef}
       style={{
-        width: 'calc(100% - 35em)',
-        height: '100%',
-        overflowX: 'auto',
-        overflowY: 'hidden',
+        width: "calc(100% - 35em)",
+        height: "100%",
+        overflowX: "auto",
+        overflowY: "hidden",
       }}
     >
       <div
@@ -134,11 +128,11 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
         <Plot
           data={[
             {
-              type: 'heatmap',
+              type: "heatmap",
               z,
               x,
               y,
-              colorscale: 'Jet',
+              colorscale: "Jet",
               showscale: false,
               zsmooth: false,
             } as Partial<Plotly.PlotData>,
@@ -147,40 +141,40 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
             width: plotW,
             // width: Math.max(plotW, hostRef.current?.clientWidth),
             height: plotH,
-            dragmode: 'pan',
+            dragmode: "pan",
             margin: m,
             xaxis: {
               domain: [0, 1],
-              side: 'top',
-              scaleanchor: 'y',
+              side: "top",
+              scaleanchor: "y",
               scaleratio: 1,
-              constrain: 'domain',
-              title: { text: rotated ? 'Длина' : 'Время', standoff: 8 },
+              constrain: "domain",
+              title: { text: rotated ? "Длина" : "Время", standoff: 8 },
               // optional: start from the leftmost visible “viewport” equal to host width
               // range: [0, Math.ceil((plotW - m.l - m.r) / cellPx)],
-              tickmode: 'array',
+              tickmode: "array",
               tickvals: xTickVals,
               ticktext: xTickText,
             },
             yaxis: {
               domain: [0, 1],
-              autorange: 'reversed',
-              constrain: 'domain',
-              ticks: 'outside',
-              title: { text: rotated ? 'Время' : 'Глубина', standoff: 8 },
-              tickmode: 'array',
+              autorange: "reversed",
+              constrain: "domain",
+              ticks: "outside",
+              title: { text: rotated ? "Время" : "Глубина", standoff: 8 },
+              tickmode: "array",
               tickvals: yTickVals,
               ticktext: yTickText,
             },
-            uirevision: 'keep',
+            uirevision: "keep",
           }}
           config={{
             scrollZoom: true,
             doubleClick: false,
             displayModeBar: true,
-            modeBarButtonsToRemove: ['zoom2d', 'select2d', 'lasso2d'],
+            modeBarButtonsToRemove: ["zoom2d", "select2d", "lasso2d"],
           }}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: "100%", height: "100%" }}
           useResizeHandler={false}
           onHover={onHover}
         />

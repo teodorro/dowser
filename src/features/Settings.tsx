@@ -1,7 +1,7 @@
-import { Box, Tab, Tabs } from '@mui/material';
-import React, { useState } from 'react';
-import DataSettings from './DataSettings';
-import ProcessingSettings from './ProcessingSettings';
+import { Box, Tab, Tabs } from "@mui/material";
+import React, { useState } from "react";
+import DataSettings from "./DataSettings";
+import ProcessingSettings from "./ProcessingSettings";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -28,23 +28,23 @@ const CustomTabPanel = (props: TabPanelProps) => {
 const a11yProps = (index: number) => {
   return {
     id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
   };
 };
 
 export default function Settings() {
   const [value, setValue] = useState(0);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
   return (
     <Box
       sx={{
-        width: '15em',
-        height: '100%',
-        background: '#eee',
+        width: "15em",
+        height: "100%",
+        background: "#eee",
       }}
     >
       <Tabs
