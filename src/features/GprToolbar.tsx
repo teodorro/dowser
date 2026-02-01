@@ -5,23 +5,24 @@ import {
   styled,
   Toolbar,
   Typography,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { DarkMode, FolderOpen } from '@mui/icons-material';
-import { readKrotTxtFile } from '../read-file/read-krot-txt-file';
-import useBscanStore from '../stores/bscan-store';
-import { readGeoFile } from '../read-file/read-geo-file';
-import { readGemFile } from '../read-file/read-gem-file';
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { DarkMode, FolderOpen } from "@mui/icons-material";
+import { readKrotTxtFile } from "../read-file/read-krot-txt-file";
+import useBscanStore from "../stores/bscan-store";
+import { readGeoFile } from "../read-file/read-geo-file";
+import { readGemFile } from "../read-file/read-gem-file";
+import UndoRedo from "./UndoRedo";
 
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
   height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
+  overflow: "hidden",
+  position: "absolute",
   bottom: 0,
   left: 0,
-  whiteSpace: 'nowrap',
+  whiteSpace: "nowrap",
   width: 1,
 });
 
@@ -33,16 +34,16 @@ export default function GprToolbar() {
     if (files == null || files.length === 0) return;
     const file = files[0];
     if (!file) return;
-    const extension = file.name.split('.')[file.name.split('.').length - 1];
+    const extension = file.name.split(".")[file.name.split(".").length - 1];
     console.log(file);
     switch (extension) {
-      case 'txt':
+      case "txt":
         loadTxtFile(file);
         break;
-      case 'geo':
+      case "geo":
         loadGeoFile(file);
         break;
-      case 'gem':
+      case "gem":
         loadGemFile(file);
         break;
       default:
@@ -53,14 +54,14 @@ export default function GprToolbar() {
   const loadTxtFile = async (file: File) => {
     try {
       if (file.size > 5 * 1024 * 1024) {
-        console.warn('File is large; consider streaming.');
+        console.warn("File is large; consider streaming.");
       }
 
       const raw = await file.text();
       const krotdata = readKrotTxtFile(raw);
       setFullAmpBscan(krotdata);
     } catch (err) {
-      console.error('Failed to read file:', err);
+      console.error("Failed to read file:", err);
     }
   };
 
@@ -101,38 +102,48 @@ export default function GprToolbar() {
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
+    <Box sx={{ flexGrow: 1, height: "3em" }}>
+      <AppBar position="static" sx={{ height: "3em" }}>
+        <Toolbar
+          variant="dense"
+          disableGutters
+          sx={{
+            height: "3em",
+            minHeight: "3em", // <-- the important part
+            px: 1, // add your own padding since gutters are off
+            alignItems: "center", // usually already true, but explicit is fine
+          }}
+        >
           <IconButton
             component="label"
-            size="large"
+            size="medium"
             edge="start"
             color="inherit"
             aria-label="menu"
-            sx={{ mr: 2 }}
+            sx={{ m: 0.5 }}
           >
             <FolderOpen></FolderOpen>
             <VisuallyHiddenInput type="file" onChange={onLoadFile} />
           </IconButton>
+          <UndoRedo></UndoRedo>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Dowser
           </Typography>
           <IconButton
-            size="large"
+            size="medium"
             edge="start"
             color="inherit"
             aria-label="menu"
-            sx={{ mr: 2 }}
+            sx={{ mr: 0.5 }}
           >
             <DarkMode></DarkMode>
           </IconButton>
           <IconButton
-            size="large"
+            size="medium"
             edge="start"
             color="inherit"
             aria-label="menu"
-            sx={{ mr: 2 }}
+            sx={{ mr: 0.5 }}
           >
             <MenuIcon />
           </IconButton>
