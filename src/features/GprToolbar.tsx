@@ -27,7 +27,7 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export default function GprToolbar() {
-  const setFullAmpBscan = useBscanStore.use.setFullAmpBscan();
+  const setBscanFullAmp = useBscanStore.use.setBscanFullAmp();
 
   const onLoadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -59,7 +59,7 @@ export default function GprToolbar() {
 
       const raw = await file.text();
       const krotdata = readKrotTxtFile(raw);
-      setFullAmpBscan(krotdata);
+      setBscanFullAmp(krotdata);
     } catch (err) {
       console.error("Failed to read file:", err);
     }
@@ -72,12 +72,12 @@ export default function GprToolbar() {
       const buffer = reader.result as ArrayBuffer; // FileReader gives ArrayBuffer here
       const uint8 = new Uint8Array(buffer);
       const data = readGeoFile(uint8);
-      setFullAmpBscan(data);
+      setBscanFullAmp(data);
     };
 
     reader.onerror = () => {
       // setError('Failed to read file');
-      setFullAmpBscan([]);
+      setBscanFullAmp([]);
     };
 
     reader.readAsArrayBuffer(file);
@@ -90,12 +90,12 @@ export default function GprToolbar() {
       const buffer = reader.result as ArrayBuffer; // FileReader gives ArrayBuffer here
       const uint8 = new Uint8Array(buffer);
       const data = readGemFile(uint8);
-      setFullAmpBscan(data);
+      setBscanFullAmp(data);
     };
 
     reader.onerror = () => {
       // setError('Failed to read file');
-      setFullAmpBscan([]);
+      setBscanFullAmp([]);
     };
 
     reader.readAsArrayBuffer(file);

@@ -1,6 +1,7 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import React, { useState } from "react";
 import DataSettings from "./DataSettings";
+import VisualSettings from "./VisualSettings";
 import ProcessingSettings from "./ProcessingSettings";
 
 interface TabPanelProps {
@@ -42,25 +43,31 @@ export default function Settings() {
   return (
     <Box
       sx={{
-        width: "15em",
+        width: "20em",
         height: "100%",
         background: "#eee",
+        color: "#888",
       }}
     >
       <Tabs
         value={value}
         onChange={handleChange}
+        variant="scrollable"
         aria-label="basic tabs example"
       >
         <Tab label="Размеры" {...a11yProps(0)} />
-        <Tab label="Обработка" {...a11yProps(1)} />
+        <Tab label="Визуальные настройки" {...a11yProps(1)} />
+        <Tab label="Обработка данных" {...a11yProps(2)} />
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>
         <DataSettings></DataSettings>
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        <ProcessingSettings></ProcessingSettings>
+        <VisualSettings />
+      </CustomTabPanel>
+      <CustomTabPanel value={value} index={2}>
+        <ProcessingSettings />
       </CustomTabPanel>
     </Box>
   );

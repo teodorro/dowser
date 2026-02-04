@@ -1,9 +1,10 @@
-import { create } from 'zustand';
-import { createSelectors } from '../utils/create-selectors';
+import { create } from "zustand";
+import { createSelectors } from "../utils/create-selectors";
 
 interface IBscanStore {
-  fullAmpBscan: number[][];
   bscan: number[][];
+  bscanToShow: number[][];
+  bscanFullAmp: number[][];
   d: number;
   dx: number;
   dt: number;
@@ -12,8 +13,9 @@ interface IBscanStore {
   ascanInd: number;
   selectedYAxis: string;
 
-  setFullAmpBscan: (dtoBscan: number[][]) => void;
   setBscan: (dtoBscan: number[][]) => void;
+  setBscanToShow: (dtoBscan: number[][]) => void;
+  setBscanFullAmp: (dtoBscan: number[][]) => void;
   setD: (dtoD: number) => void;
   setDx: (dtoDx: number) => void;
   setDt: (dtoDt: number) => void;
@@ -24,12 +26,17 @@ interface IBscanStore {
 }
 
 const useBscanStoreBase = create<IBscanStore>((set) => ({
-  fullAmpBscan: [
+  bscan: [
     [1, 20, 30],
     [20, 1, 60],
     [30, 60, 1],
   ],
-  bscan: [
+  bscanToShow: [
+    [1, 20, 30],
+    [20, 1, 60],
+    [30, 60, 1],
+  ],
+  bscanFullAmp: [
     [1, 20, 30],
     [20, 1, 60],
     [30, 60, 1],
@@ -40,10 +47,11 @@ const useBscanStoreBase = create<IBscanStore>((set) => ({
   eps: 9,
   velocity: 0.1,
   ascanInd: 0,
-  selectedYAxis: 'time',
+  selectedYAxis: "time",
 
-  setFullAmpBscan: (dtoBscan) => set(() => ({ fullAmpBscan: dtoBscan })),
   setBscan: (dtoBscan) => set(() => ({ bscan: dtoBscan })),
+  setBscanToShow: (dtoBscan) => set(() => ({ bscanToShow: dtoBscan })),
+  setBscanFullAmp: (dtoBscan) => set(() => ({ bscanFullAmp: dtoBscan })),
   setD: (dtoD) => set(() => ({ d: dtoD })),
   setDx: (dtoDx) => set(() => ({ dx: dtoDx })),
   setDt: (dtoDt) => set(() => ({ dt: dtoDt })),

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { createSelectors } from '../utils/create-selectors';
-import { logAmplitude } from '../processing/log-amplitude';
+import { create } from "zustand";
+import { createSelectors } from "../utils/create-selectors";
+import { logAmplitude } from "../processing/visual-processing/log-amplitude";
 
 interface IDataProcessorStore {
   logAmplitudeSelected: boolean;

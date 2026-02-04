@@ -1,20 +1,14 @@
 import { Box, FormControlLabel, FormGroup, Switch } from "@mui/material";
-import { logAmplitude } from "../processing/visual-processing/log-amplitude";
-import useDataProcessorStore from "../stores/data-processor-store";
+import useVisualSettingsStore from "../stores/visual-settings-store";
 
-export default function ProcessingSettings() {
-  const logAmplitudeSelected = useDataProcessorStore.use.logAmplitudeSelected();
-  const operations = useDataProcessorStore.use.operations();
+export default function VisualSettings() {
+  const logAmplitudeSelected =
+    useVisualSettingsStore.use.logAmplitudeSelected();
 
   const setLogAmplitudeSelected =
-    useDataProcessorStore.use.setLogAmplitudeSelected();
-  const setOperations = useDataProcessorStore.use.setOperations();
+    useVisualSettingsStore.use.setLogAmplitudeSelected();
 
   const handleChangeLogScale = () => {
-    const val = !logAmplitudeSelected;
-    if (val) {
-      setOperations([...operations, logAmplitude]);
-    } else setOperations(operations.filter((op) => op !== logAmplitude));
     setLogAmplitudeSelected(!logAmplitudeSelected);
   };
 

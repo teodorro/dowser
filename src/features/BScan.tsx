@@ -4,6 +4,8 @@ import Plotly from "plotly.js-dist-min";
 const Plot = createPlotlyComponent(Plotly);
 import useBscanStore from "../stores/bscan-store";
 import useDataProcessorStore from "../stores/data-processor-store";
+import useVisualSettingsStore from "../stores/visual-settings-store";
+import { logAmplitude } from "../processing/visual-processing/log-amplitude";
 
 const transpose = <T,>(m: T[][]): T[][] =>
   m.length
@@ -14,20 +16,25 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   const m = { t: 36, r: 12, b: 36, l: 56 };
 
   const bscan = useBscanStore.use.bscan();
-  const fullAmpBscan = useBscanStore.use.fullAmpBscan();
+  const bscanToShow = useBscanStore.use.bscanToShow();
+  const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
   const velocity = useBscanStore.use.velocity();
   const selectedYAxis = useBscanStore.use.selectedYAxis();
 
   const setBscan = useBscanStore.use.setBscan();
+  const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setAscanInd = useBscanStore.use.setAscanInd();
+
+  const logAmplitudeSelected =
+    useVisualSettingsStore.use.logAmplitudeSelected();
 
   const operations = useDataProcessorStore.use.operations();
 
   const z = useMemo(
-    () => (rotated ? transpose(bscan) : bscan),
-    [bscan, rotated],
+    () => (rotated ? transpose(bscanToShow) : bscanToShow),
+    [bscanToShow, rotated],
   );
 
   const hostRef = useRef<HTMLDivElement>(null);
@@ -86,22 +93,27 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
       setYTickVals(vals);
       setYTickText(text);
     }
-  }, [bscan, selectedYAxis, velocity]);
+  }, [bscanToShow, selectedYAxis, velocity]);
 
   useEffect(() => {
-    let data = fullAmpBscan;
-    operations.forEach((operation) => {
-      data = operation(data);
-    });
+    const data = bscanFullAmp;
     setBscan(data);
-  }, [fullAmpBscan, operations]);
+  }, [bscanFullAmp, operations]);
+
+  useEffect(() => {
+    let data = bscan;
+    if (logAmplitudeSelected) {
+      data = logAmplitude(data);
+    }
+    setBscanToShow(data);
+  }, [bscan, logAmplitudeSelected]);
 
   const onHover = (event: Readonly<Plotly.PlotHoverEvent>) => {
     const inds = event.xvals;
     if (inds != null && inds.length > 0) {
       let ind = Number.parseInt((inds[0] as number).toFixed(0));
       ind = Math.max(0, ind);
-      ind = Math.min(ind, bscan.length - 1);
+      ind = Math.min(ind, bscanToShow.length - 1);
       setAscanInd(ind);
     }
   };

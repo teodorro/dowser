@@ -1,3 +1,5 @@
+// NOT USED!!!
+
 export const tuneZeroAmplitude = (data: number[][]): number[][] => {
   let processedData: number[][] = [];
   const min = Math.min(...data.map((x) => Math.min(...x)));
@@ -11,7 +13,7 @@ export const tuneZeroAmplitude = (data: number[][]): number[][] => {
     processedData = convert6000(data);
   } else if (max < 180000) {
     processedData = convert180000(data);
-  } else throw new Error('Обработка формата файла не реализована');
+  } else throw new Error("Обработка формата файла не реализована");
   return processedData;
 };
 
@@ -20,7 +22,7 @@ const convert128 = (data: number[][]): number[][] => {
   data.forEach((ascan) =>
     ascan.forEach((val, ind) => {
       ascan[ind] = val - zeroAmp;
-    })
+    }),
   );
   return data;
 };
@@ -30,7 +32,7 @@ const convert256 = (data: number[][]): number[][] => {
   data.forEach((ascan) =>
     ascan.forEach((val, ind) => {
       ascan[ind] = val - zeroAmp;
-    })
+    }),
   );
   return data;
 };
@@ -40,7 +42,7 @@ const convert6000 = (data: number[][]): number[][] => {
   data.forEach((ascan) =>
     ascan.forEach((val, ind) => {
       ascan[ind] = val - zeroAmp;
-    })
+    }),
   );
   return data;
 };
@@ -50,7 +52,7 @@ const convert180000 = (data: number[][]): number[][] => {
   data.forEach((ascan) =>
     ascan.forEach((val, ind) => {
       ascan[ind] = val - zeroAmp;
-    })
+    }),
   );
   return data;
 };
