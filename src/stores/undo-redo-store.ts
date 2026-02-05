@@ -26,12 +26,12 @@ export const makeUndoRedoStore = () =>
     undoClicked: false,
     redoClicked: false,
 
-    addOperation: (operation: Operation, currentBscan: number[][]) =>
+    addOperation: (operation: Operation, bscanBeforeOp: number[][]) =>
       set(() => {
         const { undoStack, redoStack, position } = get();
         const newUndoStack = undoStack.slice(0, position).concat({
           title: operation.title + " (revert)",
-          bscan: currentBscan,
+          bscan: bscanBeforeOp,
         });
         const newRedoStack = redoStack.slice(0, position).concat(operation);
         return {

@@ -1,21 +1,24 @@
-import { Box, FormControlLabel, FormGroup, Switch } from "@mui/material";
-import { logAmplitude } from "../processing/visual-processing/log-amplitude";
-import useDataProcessorStore from "../stores/data-processor-store";
+import { Box, IconButton } from "@mui/material";
+import { Remove } from "@mui/icons-material";
+import useBscanStore from "../stores/bscan-store";
+import { subtractAverage } from "../processing/data-processing/subtract-average";
+import { useUndoRedoStore } from "../stores/undo-redo-store";
+import { useShallow } from "zustand/shallow";
 
 export default function ProcessingSettings() {
-  const logAmplitudeSelected = useDataProcessorStore.use.logAmplitudeSelected();
-  const operations = useDataProcessorStore.use.operations();
+  const bscan = useBscanStore.use.bscan();
+  const setBscan = useBscanStore.use.setBscan();
 
-  const setLogAmplitudeSelected =
-    useDataProcessorStore.use.setLogAmplitudeSelected();
-  const setOperations = useDataProcessorStore.use.setOperations();
+  const { addOperation } = useUndoRedoStore(
+    useShallow((s) => ({
+      addOperation: s.addOperation,
+    })),
+  );
 
-  const handleChangeLogScale = () => {
-    const val = !logAmplitudeSelected;
-    if (val) {
-      setOperations([...operations, logAmplitude]);
-    } else setOperations(operations.filter((op) => op !== logAmplitude));
-    setLogAmplitudeSelected(!logAmplitudeSelected);
+  const handleRemoveAverageClick = () => {
+    const data = subtractAverage(bscan);
+    addOperation({ title: "Вычитание среднего", bscan: data }, [...bscan]);
+    setBscan(data);
   };
 
   return (
@@ -25,18 +28,12 @@ export default function ProcessingSettings() {
         background: "#eee",
       }}
     >
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={logAmplitudeSelected}
-              onChange={handleChangeLogScale}
-            />
-          }
-          label="Логарифмическая шкала"
-          sx={{ color: "#444", fontSize: "8pt" }}
-        />
-      </FormGroup>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1 }}>
+        <IconButton aria-label="delete" onClick={handleRemoveAverageClick}>
+          <Remove />
+        </IconButton>
+        <Box>Вычитание среднего</Box>
+      </Box>
     </Box>
   );
 }
