@@ -6,13 +6,10 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import { DarkMode, FolderOpen } from "@mui/icons-material";
-import { readKrotTxtFile } from "../read-file/read-krot-txt-file";
-import useBscanStore from "../stores/bscan-store";
-import { readGeoFile } from "../read-file/read-geo-file";
-import { readGemFile } from "../read-file/read-gem-file";
+import { FolderOpen, WidthNormal, WidthWide } from "@mui/icons-material";
 import UndoRedo from "./UndoRedo";
+import { loadDataFile } from "../read-file/load-data-file";
+import useUiStore from "../stores/ui-store";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -27,78 +24,15 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 export default function GprToolbar() {
-  const setBscanFullAmp = useBscanStore.use.setBscanFullAmp();
+  const ascanHidden = useUiStore.use.ascanHidden();
+  const setAscanHidden = useUiStore.use.setAscanHidden();
 
   const onLoadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files == null || files.length === 0) return;
     const file = files[0];
     if (!file) return;
-    const extension = file.name.split(".")[file.name.split(".").length - 1];
-    console.log(file);
-    switch (extension) {
-      case "txt":
-        loadTxtFile(file);
-        break;
-      case "geo":
-        loadGeoFile(file);
-        break;
-      case "gem":
-        loadGemFile(file);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const loadTxtFile = async (file: File) => {
-    try {
-      if (file.size > 5 * 1024 * 1024) {
-        console.warn("File is large; consider streaming.");
-      }
-
-      const raw = await file.text();
-      const krotdata = readKrotTxtFile(raw);
-      setBscanFullAmp(krotdata);
-    } catch (err) {
-      console.error("Failed to read file:", err);
-    }
-  };
-
-  const loadGeoFile = async (file: File) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const buffer = reader.result as ArrayBuffer; // FileReader gives ArrayBuffer here
-      const uint8 = new Uint8Array(buffer);
-      const data = readGeoFile(uint8);
-      setBscanFullAmp(data);
-    };
-
-    reader.onerror = () => {
-      // setError('Failed to read file');
-      setBscanFullAmp([]);
-    };
-
-    reader.readAsArrayBuffer(file);
-  };
-
-  const loadGemFile = async (file: File) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const buffer = reader.result as ArrayBuffer; // FileReader gives ArrayBuffer here
-      const uint8 = new Uint8Array(buffer);
-      const data = readGemFile(uint8);
-      setBscanFullAmp(data);
-    };
-
-    reader.onerror = () => {
-      // setError('Failed to read file');
-      setBscanFullAmp([]);
-    };
-
-    reader.readAsArrayBuffer(file);
+    loadDataFile(file);
   };
 
   return (
@@ -129,7 +63,7 @@ export default function GprToolbar() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Dowser
           </Typography>
-          <IconButton
+          {/* <IconButton
             size="medium"
             edge="start"
             color="inherit"
@@ -146,6 +80,20 @@ export default function GprToolbar() {
             sx={{ mr: 0.5 }}
           >
             <MenuIcon />
+          </IconButton> */}
+          <IconButton
+            size="medium"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 0.5 }}
+            onClick={() => setAscanHidden(!ascanHidden)}
+          >
+            {ascanHidden ? (
+              <WidthNormal></WidthNormal>
+            ) : (
+              <WidthWide></WidthWide>
+            )}
           </IconButton>
         </Toolbar>
       </AppBar>
