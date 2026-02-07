@@ -1,4 +1,5 @@
 import useBscanStore from "../stores/bscan-store";
+import useUiStore from "../stores/ui-store";
 import { readGemFile } from "./read-gem-file";
 import { readGeoFile } from "./read-geo-file";
 import { readKrotTxtFile } from "./read-krot-txt-file";
@@ -34,6 +35,7 @@ const loadTxtFile = async (file: File) => {
     const raw = await file.text();
     const krotdata = readKrotTxtFile(raw);
     useBscanStore.getState().setBscanFullAmp(krotdata);
+    useUiStore.getState().setFilename(file.name);
   } catch (err) {
     console.error("Failed to read file:", err);
   }
@@ -47,6 +49,7 @@ const loadGeoFile = async (file: File) => {
     const uint8 = new Uint8Array(buffer);
     const data = readGeoFile(uint8);
     useBscanStore.getState().setBscanFullAmp(data);
+    useUiStore.getState().setFilename(file.name);
   };
 
   reader.onerror = () => {
@@ -65,6 +68,7 @@ const loadGemFile = async (file: File) => {
     const uint8 = new Uint8Array(buffer);
     const data = readGemFile(uint8);
     useBscanStore.getState().setBscanFullAmp(data);
+    useUiStore.getState().setFilename(file.name);
   };
 
   reader.onerror = () => {

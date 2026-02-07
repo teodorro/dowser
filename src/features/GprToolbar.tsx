@@ -31,6 +31,7 @@ const VisuallyHiddenInput = styled("input")({
 export default function GprToolbar() {
   const ascanHidden = useUiStore.use.ascanHidden();
   const setAscanHidden = useUiStore.use.setAscanHidden();
+  const filename = useUiStore.use.filename();
 
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
 
@@ -88,7 +89,7 @@ export default function GprToolbar() {
           </IconButton>
           <UndoRedo></UndoRedo>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Dowser
+            {filename}
           </Typography>
           {/* <IconButton
             size="medium"
