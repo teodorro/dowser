@@ -13,6 +13,8 @@ export default function UndoRedo() {
     setRedoClicked,
     undoClicked,
     redoClicked,
+    isUndoAvailable,
+    isRedoAvailable,
   } = useUndoRedoStore(
     useShallow((s) => ({
       position: s.position,
@@ -73,6 +75,7 @@ export default function UndoRedo() {
         aria-label="menu"
         edge="start"
         size="large"
+        disabled={isUndoAvailable() === false}
         onClick={handleUndoClick}
         sx={{
           padding: 0,
@@ -91,6 +94,7 @@ export default function UndoRedo() {
         aria-label="menu"
         edge="start"
         size="medium"
+        disabled={isRedoAvailable() === false}
         onClick={handleRedoClick}
         sx={{
           padding: 0,

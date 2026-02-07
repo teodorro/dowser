@@ -17,8 +17,12 @@ export const loadDataFile = (file: File) => {
       loadGemFile(file);
       break;
     default:
-      break;
+      unreachable(extension);
   }
+};
+
+const unreachable = (extension: string): never => {
+  throw new Error(`Обработка расширения файла "${extension}" не реализована`);
 };
 
 const loadTxtFile = async (file: File) => {

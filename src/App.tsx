@@ -5,6 +5,7 @@ import Bscan from "./features/BScan";
 import Ascan from "./features/Ascan";
 import Settings from "./features/Settings";
 import useUiStore from "./stores/ui-store";
+import ErrorNotification from "./components/ErrorNotification";
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
@@ -34,6 +35,18 @@ function App() {
         <Settings></Settings>
         <Bscan rotated={true}></Bscan>
         {!ascanHidden && <Ascan></Ascan>}
+      </Box>
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: "1em",
+          left: 0,
+          right: 0,
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <ErrorNotification></ErrorNotification>
       </Box>
     </Box>
   );

@@ -56,18 +56,18 @@ export default function Settings() {
         aria-label="basic tabs example"
       >
         <Tab label="Размеры" {...a11yProps(0)} />
-        <Tab label="Визуальные настройки" {...a11yProps(1)} />
-        <Tab label="Обработка данных" {...a11yProps(2)} />
+        <Tab label="Обработка данных" {...a11yProps(1)} />
+        <Tab label="Визуальные настройки" {...a11yProps(2)} />
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>
         <DataSettings></DataSettings>
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        <VisualSettings />
+        <ProcessingSettings />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
-        <ProcessingSettings />
+        <VisualSettings />
       </CustomTabPanel>
     </Box>
   );

@@ -10,6 +10,11 @@ import { FolderOpen, WidthNormal, WidthWide } from "@mui/icons-material";
 import UndoRedo from "./UndoRedo";
 import { loadDataFile } from "../read-file/load-data-file";
 import useUiStore from "../stores/ui-store";
+import { useUndoRedoStore } from "../stores/undo-redo-store";
+import { useShallow } from "zustand/shallow";
+import { showError } from "../utils/show-error";
+import { useEffect } from "react";
+import useBscanStore from "../stores/bscan-store";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -27,12 +32,28 @@ export default function GprToolbar() {
   const ascanHidden = useUiStore.use.ascanHidden();
   const setAscanHidden = useUiStore.use.setAscanHidden();
 
+  const bscanFullAmp = useBscanStore.use.bscanFullAmp();
+
+  const { clearUndoRedo } = useUndoRedoStore(
+    useShallow((s) => ({
+      clearUndoRedo: s.clearUndoRedo,
+    })),
+  );
+
+  useEffect(() => {
+    clearUndoRedo();
+  }, [bscanFullAmp]);
+
   const onLoadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files == null || files.length === 0) return;
     const file = files[0];
     if (!file) return;
-    loadDataFile(file);
+    try {
+      loadDataFile(file);
+    } catch (err) {
+      showError(`Ошибка при загрузке файла: ${(err as Error).message}`);
+    }
   };
 
   return (
@@ -57,7 +78,13 @@ export default function GprToolbar() {
             sx={{ m: 0.5 }}
           >
             <FolderOpen></FolderOpen>
-            <VisuallyHiddenInput type="file" onChange={onLoadFile} />
+            <VisuallyHiddenInput
+              type="file"
+              onChange={onLoadFile}
+              onClick={(e) => {
+                (e.currentTarget as HTMLInputElement).value = ""; // allow re-uploading the same file
+              }}
+            />
           </IconButton>
           <UndoRedo></UndoRedo>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
