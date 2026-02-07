@@ -93,7 +93,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
       setYTickVals(vals);
       setYTickText(text);
     }
-  }, [bscanToShow, selectedYAxis, velocity]);
+  }, [bscanToShow, selectedYAxis, velocity, dt]);
 
   useEffect(() => {
     const data = bscanFullAmp;
@@ -122,7 +122,8 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     <div
       ref={hostRef}
       style={{
-        width: "calc(100% - 35em)",
+        // width: "calc(100% - 35em)",
+        width: "100%",
         height: "100%",
         overflowX: "auto",
         overflowY: "hidden",
