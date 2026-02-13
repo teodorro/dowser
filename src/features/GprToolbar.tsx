@@ -5,26 +5,26 @@ import {
   styled,
   Toolbar,
   Typography,
-} from "@mui/material";
-import { FolderOpen, WidthNormal, WidthWide } from "@mui/icons-material";
-import UndoRedo from "./UndoRedo";
-import { loadDataFile } from "../read-file/load-data-file";
-import useUiStore from "../stores/ui-store";
-import { useUndoRedoStore } from "../stores/undo-redo-store";
-import { useShallow } from "zustand/shallow";
-import { showError } from "../utils/show-error";
-import { useEffect } from "react";
-import useBscanStore from "../stores/bscan-store";
+} from '@mui/material';
+import { FolderOpen, Menu, WidthNormal, WidthWide } from '@mui/icons-material';
+import UndoRedo from './UndoRedo';
+import { loadDataFile } from '../read-file/load-data-file';
+import useUiStore from '../stores/ui-store';
+import { useUndoRedoStore } from '../stores/undo-redo-store';
+import { useShallow } from 'zustand/shallow';
+import { showError } from '../utils/show-error';
+import { useEffect } from 'react';
+import useBscanStore from '../stores/bscan-store';
 
-const VisuallyHiddenInput = styled("input")({
-  clip: "rect(0 0 0 0)",
-  clipPath: "inset(50%)",
+const VisuallyHiddenInput = styled('input')({
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
   height: 1,
-  overflow: "hidden",
-  position: "absolute",
+  overflow: 'hidden',
+  position: 'absolute',
   bottom: 0,
   left: 0,
-  whiteSpace: "nowrap",
+  whiteSpace: 'nowrap',
   width: 1,
 });
 
@@ -57,17 +57,36 @@ export default function GprToolbar() {
     }
   };
 
+  const calcCarrots = () => {
+    const min = 1;
+    const max = 35;
+    const minRed = 1;
+    const maxRed = 54;
+    const chosen: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      while (true) {
+        const x = Math.floor(Math.random() * max) + min;
+        if (chosen.every((y) => y !== x)) {
+          chosen.push(x);
+          break;
+        }
+      }
+    }
+    const red = Math.floor(Math.random() * maxRed) + minRed;
+    console.log('yellow', chosen, 'red', red);
+  };
+
   return (
-    <Box sx={{ flexGrow: 1, height: "3em" }}>
-      <AppBar position="static" sx={{ height: "3em" }}>
+    <Box sx={{ flexGrow: 1, height: '3em' }}>
+      <AppBar position="static" sx={{ height: '3em' }}>
         <Toolbar
           variant="dense"
           disableGutters
           sx={{
-            height: "3em",
-            minHeight: "3em", // <-- the important part
+            height: '3em',
+            minHeight: '3em', // <-- the important part
             px: 1, // add your own padding since gutters are off
-            alignItems: "center", // usually already true, but explicit is fine
+            alignItems: 'center', // usually already true, but explicit is fine
           }}
         >
           <IconButton
@@ -83,7 +102,7 @@ export default function GprToolbar() {
               type="file"
               onChange={onLoadFile}
               onClick={(e) => {
-                (e.currentTarget as HTMLInputElement).value = ""; // allow re-uploading the same file
+                (e.currentTarget as HTMLInputElement).value = ''; // allow re-uploading the same file
               }}
             />
           </IconButton>
@@ -99,16 +118,17 @@ export default function GprToolbar() {
             sx={{ mr: 0.5 }}
           >
             <DarkMode></DarkMode>
-          </IconButton>
+          </IconButton> */}
           <IconButton
             size="medium"
             edge="start"
             color="inherit"
             aria-label="menu"
             sx={{ mr: 0.5 }}
+            onClick={calcCarrots}
           >
-            <MenuIcon />
-          </IconButton> */}
+            <Menu />
+          </IconButton>
           <IconButton
             size="medium"
             edge="start"
