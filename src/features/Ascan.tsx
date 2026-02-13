@@ -1,18 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
-import useBscanStore from "../stores/bscan-store";
-import * as echarts from "echarts/core";
-import ReactEChartsCore from "echarts-for-react/lib/core";
-import { Box } from "@mui/material";
+import { useEffect, useMemo, useState } from 'react';
+import useBscanStore from '../stores/bscan-store';
+import * as echarts from 'echarts/core';
+import ReactEChartsCore from 'echarts-for-react/lib/core';
+import { Box } from '@mui/material';
 import {
   GridComponent,
   TooltipComponent,
   VisualMapComponent,
   TitleComponent,
   ToolboxComponent,
-} from "echarts/components";
-import { LineChart } from "echarts/charts";
-import { DataZoomComponent } from "echarts/components";
-import { CanvasRenderer } from "echarts/renderers";
+} from 'echarts/components';
+import { LineChart } from 'echarts/charts';
+import { DataZoomComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([
   LineChart,
@@ -26,7 +26,7 @@ echarts.use([
 ]);
 
 export default function Ascan() {
-  const bscan = useBscanStore.use.bscan();
+  const bscanToShow = useBscanStore.use.bscanToShow();
   const ascanInd = useBscanStore.use.ascanInd();
   const selectedYAxis = useBscanStore.use.selectedYAxis();
   const velocity = useBscanStore.use.velocity();
@@ -35,75 +35,54 @@ export default function Ascan() {
   const [yLabels, setYLabels] = useState<number[]>([]);
 
   const minBscan = useMemo(
-    () => Math.min(...bscan.map((x) => Math.min(...x))),
-    [bscan],
+    () => Math.min(...bscanToShow.map((x) => Math.min(...x))),
+    [bscanToShow],
   );
 
   const maxBscan = useMemo(
-    () => Math.max(...bscan.map((x) => Math.max(...x))),
-    [bscan],
+    () => Math.max(...bscanToShow.map((x) => Math.max(...x))),
+    [bscanToShow],
   );
 
   const data = useMemo(() => {
-    if (!bscan.length) return [];
-    const a = [...bscan[ascanInd].entries()].map(([idx, val]) => [
+    if (!bscanToShow.length) return [];
+    const a = [...bscanToShow[ascanInd].entries()].map(([idx, val]) => [
       val,
-      bscan[ascanInd].length - idx - 1,
+      bscanToShow[ascanInd].length - idx - 1,
     ]);
     return a;
-  }, [bscan, ascanInd]);
-
-  // const yLabels = useMemo(
-  //   () =>
-  //     bscan.length
-  //       ? bscan[ascanInd]
-  //           .map((_, idx) => Number.parseFloat(idx.toFixed(2)))
-  //           .reverse()
-  //       : [],
-  //   [bscan, selectedYAxis, velocity]
-  // );
+  }, [bscanToShow, ascanInd]);
 
   useEffect(() => {
-    if (bscan.length === 0) {
+    if (bscanToShow.length === 0) {
       setYLabels([]);
-    } else if (selectedYAxis === "time") {
-      const labels = bscan[ascanInd]
+    } else if (selectedYAxis === 'time') {
+      const labels = bscanToShow[ascanInd]
         .map((_, idx) => Number.parseFloat(idx.toFixed(2)) * dt)
         .reverse();
       setYLabels(labels);
-    } else if (selectedYAxis === "depth") {
-      // const vals: number[] = [];
-      // const text: number[] = [];
-      // for (let d = 0; ; d += 1) {
-      //   const i = Number.parseFloat((d / dt / velocity).toFixed(0));
-      //   if (vals.every((x) => x !== i && x + 9 < i)) {
-      //     vals.push(i);
-      //     text.push(d);
-      //   }
-      //   if (i > bscan[ascanInd].length) break;
-      // }
-      // setYLabels(text.reverse());
-      const labels = bscan[ascanInd]
+    } else if (selectedYAxis === 'depth') {
+      const labels = bscanToShow[ascanInd]
         .map((_, idx) => Number.parseFloat((idx * dt * velocity).toFixed(1)))
         .reverse();
       setYLabels(labels);
     } else {
       setYLabels([]);
     }
-  }, [bscan, selectedYAxis, velocity]);
+  }, [bscanToShow, selectedYAxis, velocity]);
 
   const option = useMemo<echarts.EChartsCoreOption>(() => {
     return {
       tooltip: {
-        trigger: "axis",
+        trigger: 'axis',
         axisPointer: {
-          type: "cross",
+          type: 'cross',
         },
       },
       toolbox: {
         feature: {
           dataZoom: {
-            xAxisIndex: "none",
+            xAxisIndex: 'none',
             yAxisIndex: 0,
           },
           restore: {},
@@ -111,34 +90,34 @@ export default function Ascan() {
         },
       },
       xAxis: {
-        type: "value",
+        type: 'value',
         boundaryGap: false,
         min: minBscan,
         max: maxBscan,
       },
       yAxis: {
-        type: "category",
+        type: 'category',
         boundaryGap: false,
         data: yLabels,
       },
       dataZoom: [
         {
-          type: "inside",
+          type: 'inside',
           yAxisIndex: 0,
         },
         {
-          type: "slider",
+          type: 'slider',
           yAxisIndex: 0,
         },
       ],
       series: [
         {
-          name: "A-scan",
-          type: "line",
-          symbol: "none",
-          sampling: "lttb",
+          name: 'A-scan',
+          type: 'line',
+          symbol: 'none',
+          sampling: 'lttb',
           itemStyle: {
-            color: "#444",
+            color: '#444',
           },
           data,
         },
@@ -149,11 +128,11 @@ export default function Ascan() {
   return (
     <Box
       sx={{
-        width: "30em",
-        height: "100%",
-        overflowX: "auto",
-        overflowY: "hidden",
-        borderLeft: "2px solid #444",
+        width: '30em',
+        height: '100%',
+        overflowX: 'auto',
+        overflowY: 'hidden',
+        borderLeft: '2px solid #444',
       }}
     >
       <ReactEChartsCore
@@ -161,7 +140,7 @@ export default function Ascan() {
         option={option}
         notMerge
         lazyUpdate
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: '100%', height: '100%' }}
       />
     </Box>
   );
