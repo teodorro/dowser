@@ -16,15 +16,15 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   const m = { t: 36, r: 12, b: 36, l: 56 };
 
   const bscan = useBscanStore.use.bscan();
-  const bscanToShow = useBscanStore.use.bscanToShow();
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
+  const bscanFft = useBscanStore.use.bscanFft();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
   const velocity = useBscanStore.use.velocity();
   const selectedYAxis = useBscanStore.use.selectedYAxis();
 
   const setBscan = useBscanStore.use.setBscan();
-  const setBscanToShow = useBscanStore.use.setBscanToShow();
+  const setBscanFft = useBscanStore.use.setBscanFft();
   const setAscanInd = useBscanStore.use.setAscanInd();
 
   const logAmplitudeSelected =
@@ -33,8 +33,8 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   const operations = useDataProcessorStore.use.operations();
 
   const z = useMemo(
-    () => (rotated ? transpose(bscanToShow) : bscanToShow),
-    [bscanToShow, rotated],
+    () => (rotated ? transpose(bscanFft) : bscanFft),
+    [bscanFft, rotated],
   );
 
   const hostRef = useRef<HTMLDivElement>(null);
@@ -93,7 +93,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
       setYTickVals(vals);
       setYTickText(text);
     }
-  }, [bscanToShow, selectedYAxis, velocity, dt]);
+  }, [bscanFft, selectedYAxis, velocity, dt]);
 
   useEffect(() => {
     const data = bscanFullAmp;
@@ -105,7 +105,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     if (logAmplitudeSelected) {
       data = logAmplitude(data);
     }
-    setBscanToShow(data);
+    setBscanFft(data);
   }, [bscan, logAmplitudeSelected]);
 
   const onHover = (event: Readonly<Plotly.PlotHoverEvent>) => {
@@ -113,7 +113,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
     if (inds != null && inds.length > 0) {
       let ind = Number.parseInt((inds[0] as number).toFixed(0));
       ind = Math.max(0, ind);
-      ind = Math.min(ind, bscanToShow.length - 1);
+      ind = Math.min(ind, bscanFft.length - 1);
       setAscanInd(ind);
     }
   };
