@@ -1,4 +1,10 @@
-import { Box, IconButton, TextField } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
 import { BlurOn, GraphicEq, Remove } from '@mui/icons-material';
 import useBscanStore from '../stores/bscan-store';
 import { subtractAverage } from '../processing/data-processing/subtract-average';
@@ -8,6 +14,7 @@ import { savGolFilter } from '../processing/data-processing/sav-gol-fliter';
 import { useState } from 'react';
 import useUiStore from '../stores/ui-store';
 import { getFftBscan } from '../processing/data-processing/get-fft-bscan';
+import { subtractMedian } from '../processing/data-processing/subtract-median';
 
 export default function ProcessingSettings() {
   const minSavitzkyGolayWindowSize = 5;
@@ -25,17 +32,23 @@ export default function ProcessingSettings() {
     })),
   );
 
-  const [windowSizeVert, setWindowSizeVert] = useState(11);
+  const [windowSizeVert, setWindowSizeVert] = useState(7);
   const [polynomialVert, setPolynomialVert] = useState(3);
   const [windowSizeHor, setWindowSizeHor] = useState(5);
   const [polynomialHor, setPolynomialHor] = useState(3);
+  const [subtractType, setSubtractType] = useState('average');
 
-  const handleRemoveAverageClick = () => {
-    const data = subtractAverage(bscan);
-    addOperation({ title: 'Вычитание среднего', bscan: data }, [...bscan]);
-    setBscan(data);
+  const handleSubtractClick = () => {
+    if (subtractType === 'average') {
+      const data = subtractAverage(bscan);
+      addOperation({ title: 'Вычитание среднего', bscan: data }, [...bscan]);
+      setBscan(data);
+    } else if (subtractType === 'median') {
+      const data = subtractMedian(bscan);
+      addOperation({ title: 'Вычитание медианы', bscan: data }, [...bscan]);
+      setBscan(data);
+    }
   };
-
   const handleVertSmoothClick = () => {
     const data = savGolFilter(bscan, 'vertical', {
       windowSize: windowSizeVert,
@@ -95,6 +108,14 @@ export default function ProcessingSettings() {
     setFftMode(!fftMode);
   };
 
+  const handleChangeSubtractType = (
+    _: React.SyntheticEvent,
+    value: 'average' | 'median',
+  ) => {
+    if (value == null) return;
+    setSubtractType(value);
+  };
+
   return (
     <Box
       sx={{
@@ -102,11 +123,24 @@ export default function ProcessingSettings() {
         background: '#eee',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5 }}>
-        <IconButton aria-label="delete" onClick={handleRemoveAverageClick}>
-          <Remove />
-        </IconButton>
-        <Box>Вычитание среднего</Box>
+      <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5 }}>
+          <IconButton aria-label="delete" onClick={handleSubtractClick}>
+            <Remove />
+          </IconButton>
+          <Box>Вычитание</Box>
+          <ToggleButtonGroup
+            size="small"
+            color="primary"
+            value={subtractType}
+            exclusive
+            onChange={handleChangeSubtractType}
+            aria-label="Subtract"
+          >
+            <ToggleButton value="average">Среднее</ToggleButton>
+            <ToggleButton value="median">Медиана</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Box>
       <Box>
         <Box
