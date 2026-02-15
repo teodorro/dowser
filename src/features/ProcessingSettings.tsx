@@ -1,16 +1,23 @@
 import { Box, IconButton, TextField } from '@mui/material';
-import { BlurOn, Remove } from '@mui/icons-material';
+import { BlurOn, GraphicEq, Remove } from '@mui/icons-material';
 import useBscanStore from '../stores/bscan-store';
 import { subtractAverage } from '../processing/data-processing/subtract-average';
 import { useUndoRedoStore } from '../stores/undo-redo-store';
 import { useShallow } from 'zustand/shallow';
 import { savGolFilter } from '../processing/data-processing/sav-gol-fliter';
 import { useState } from 'react';
+import useUiStore from '../stores/ui-store';
+import { getFftBscan } from '../processing/data-processing/get-fft-bscan';
 
 export default function ProcessingSettings() {
   const minSavitzkyGolayWindowSize = 5;
+
   const bscan = useBscanStore.use.bscan();
   const setBscan = useBscanStore.use.setBscan();
+  const setBscanFft = useBscanStore.use.setBscanFft();
+
+  const fftMode = useUiStore.use.fftMode();
+  const setFftMode = useUiStore.use.setFftMode();
 
   const { addOperation } = useUndoRedoStore(
     useShallow((s) => ({
@@ -79,6 +86,13 @@ export default function ProcessingSettings() {
         getOddNumber(v + 1, defaultVal),
         minSavitzkyGolayWindowSize,
       );
+  };
+
+  const handleFourierAnalysisClick = () => {
+    const data = getFftBscan(bscan);
+    // addOperation({ title: 'Анализ Фурье', bscan: data }, [...bscan]);
+    setBscanFft(data.bscan);
+    setFftMode(!fftMode);
   };
 
   return (
@@ -198,6 +212,18 @@ export default function ProcessingSettings() {
             sx={{ display: 'flex', margin: '0.5em' }}
           />
         </Box>
+      </Box>
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5, pb: 0 }}
+      >
+        <IconButton
+          aria-label="graphic-eq"
+          sx={{ color: fftMode ? 'red' : 'inherit' }}
+          onClick={handleFourierAnalysisClick}
+        >
+          <GraphicEq />
+        </IconButton>
+        <Box>Анализ Фурье </Box>
       </Box>
     </Box>
   );

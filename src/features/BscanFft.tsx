@@ -3,7 +3,6 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 import Plotly from 'plotly.js-dist-min';
 const Plot = createPlotlyComponent(Plotly);
 import useBscanStore from '../stores/bscan-store';
-import useDataProcessorStore from '../stores/data-processor-store';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 
@@ -12,29 +11,26 @@ const transpose = <T,>(m: T[][]): T[][] =>
     ? Array.from({ length: m[0].length }, (_, c) => m.map((r) => r[c]))
     : [];
 
-export default function Bscan({ rotated = false }: { rotated?: boolean }) {
+export default function BscanFft({ rotated = false }: { rotated?: boolean }) {
   const m = { t: 36, r: 12, b: 36, l: 56 };
 
-  const bscan = useBscanStore.use.bscan();
-  const bscanFullAmp = useBscanStore.use.bscanFullAmp();
+  // const bscan = useBscanStore.use.bscan();
   const bscanFft = useBscanStore.use.bscanFft();
+  const bscanToShow = useBscanStore.use.bscanToShow();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
   const velocity = useBscanStore.use.velocity();
   const selectedYAxis = useBscanStore.use.selectedYAxis();
 
-  const setBscan = useBscanStore.use.setBscan();
-  const setBscanFft = useBscanStore.use.setBscanFft();
+  const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setAscanInd = useBscanStore.use.setAscanInd();
 
   const logAmplitudeSelected =
     useVisualSettingsStore.use.logAmplitudeSelected();
 
-  const operations = useDataProcessorStore.use.operations();
-
   const z = useMemo(
-    () => (rotated ? transpose(bscanFft) : bscanFft),
-    [bscanFft, rotated],
+    () => (rotated ? transpose(bscanToShow) : bscanToShow),
+    [bscanToShow, rotated],
   );
 
   const hostRef = useRef<HTMLDivElement>(null);
@@ -96,17 +92,12 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
   }, [bscanFft, selectedYAxis, velocity, dt]);
 
   useEffect(() => {
-    const data = bscanFullAmp;
-    setBscan(data);
-  }, [bscanFullAmp, operations]);
-
-  useEffect(() => {
-    let data = bscan;
+    let data = bscanFft;
     if (logAmplitudeSelected) {
       data = logAmplitude(data);
     }
-    setBscanFft(data);
-  }, [bscan, logAmplitudeSelected]);
+    setBscanToShow(data);
+  }, [bscanFft, logAmplitudeSelected]);
 
   const onHover = (event: Readonly<Plotly.PlotHoverEvent>) => {
     const inds = event.xvals;
