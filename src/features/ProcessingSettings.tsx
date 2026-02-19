@@ -15,6 +15,7 @@ import { useState } from 'react';
 import useUiStore from '../stores/ui-store';
 import { getFftBscan } from '../processing/data-processing/get-fft-bscan';
 import { subtractMedian } from '../processing/data-processing/subtract-median';
+import { dewow } from '../processing/data-processing/dewow';
 
 export default function ProcessingSettings() {
   const minSavitzkyGolayWindowSize = 5;
@@ -37,6 +38,7 @@ export default function ProcessingSettings() {
   const [windowSizeHor, setWindowSizeHor] = useState(5);
   const [polynomialHor, setPolynomialHor] = useState(3);
   const [subtractType, setSubtractType] = useState('average');
+  const [windowSizeDewow, setWindowSizeDewow] = useState(7);
 
   const handleSubtractClick = () => {
     if (subtractType === 'average') {
@@ -116,6 +118,12 @@ export default function ProcessingSettings() {
     setSubtractType(value);
   };
 
+  const handleDewowClick = () => {
+    const data = dewow(bscan, windowSizeDewow);
+    addOperation({ title: 'Dewow', bscan: data }, [...bscan]);
+    setBscan(data);
+  };
+
   return (
     <Box
       sx={{
@@ -140,6 +148,27 @@ export default function ProcessingSettings() {
             <ToggleButton value="average">Среднее</ToggleButton>
             <ToggleButton value="median">Медиана</ToggleButton>
           </ToggleButtonGroup>
+        </Box>
+      </Box>
+      <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5 }}>
+          <IconButton aria-label="delete" onClick={handleDewowClick}>
+            <Remove />
+          </IconButton>
+          <Box sx={{ mr: 4 }}>Dewow</Box>
+          <TextField
+            id="windowSizeDewow"
+            label="Окно"
+            value={windowSizeDewow}
+            variant="standard"
+            type="number"
+            inputProps={{ step: 2, min: 3 }}
+            onChange={(e) =>
+              setWindowSizeDewow(
+                getOddNumber(getNotNaNValue(e.target.value, 5), 3),
+              )
+            }
+          />
         </Box>
       </Box>
       <Box>
