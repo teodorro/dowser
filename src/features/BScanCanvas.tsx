@@ -14,7 +14,6 @@ function makeLut256(): Uint8ClampedArray {
   const lut = new Uint8ClampedArray(256 * 4);
   for (let i = 0; i < 256; i++) {
     const t = i / 255;
-    // piecewise rainbow-ish
     const r = clamp(1.5 * t - 0.5, 0, 1);
     const g = clamp(1.5 - Math.abs(2 * t - 1.0) * 1.5, 0, 1);
     const b = clamp(0.5 - 1.5 * (t - 0.66), 0, 1);
@@ -26,26 +25,21 @@ function makeLut256(): Uint8ClampedArray {
   return lut;
 }
 
-const transpose = <T,>(m: T[][]): T[][] =>
-  m.length
-    ? Array.from({ length: m[0].length }, (_, c) => m.map((r) => r[c]))
-    : [];
-
 export default function BscanCanvas() {
   const bscan = useBscanStore.use.bscan();
   const bscanToShow = useBscanStore.use.bscanToShow();
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const setBscan = useBscanStore.use.setBscan();
   const setBscanToShow = useBscanStore.use.setBscanToShow();
+  const setAscanInd = useBscanStore.use.setAscanInd();
 
   const operations = useDataProcessorStore.use.operations();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // View transform: world(data pixels) -> screen(canvas pixels)
-  const [scale, setScale] = useState(1); // zoom
-  const [tx, setTx] = useState(0); // pan x (in screen px)
-  const [ty, setTy] = useState(0); // pan y (in screen px)
+  const [scale, setScale] = useState(1);
+  const [tx, setTx] = useState(0);
+  const [ty, setTy] = useState(0);
   const dragging = useRef<boolean>(false);
   const lastX = useRef<number>(0);
   const lastY = useRef<number>(0);
@@ -111,7 +105,6 @@ export default function BscanCanvas() {
         return;
       }
 
-      // Compute min/max if not provided
       let min = valueRange?.min ?? Infinity;
       let max = valueRange?.max ?? -Infinity;
       if (!valueRange) {
@@ -131,29 +124,13 @@ export default function BscanCanvas() {
 
       const inv = 1 / (max - min);
 
-      // Create RGBA pixels
       const img = new ImageData(cols, rows);
-      const data = img.data; // Uint8ClampedArray
+      const data = img.data;
       let p = 0;
-      // for (let y = 0; y < rows; y++) {
-      //   const row = bscanToShow[y];
-      //   for (let x = 0; x < cols; x++) {
-      //     const v = row[x];
-      //     const t = clamp((v - min) * inv, 0, 1);
-      //     const idx = (t * 255) | 0;
-      //     const o = idx * 4;
-      //     data[p++] = lut[o + 0];
-      //     data[p++] = lut[o + 1];
-      //     data[p++] = lut[o + 2];
-      //     data[p++] = 255;
-      //   }
-      // }
 
-      const rotatedBscanToShow = transpose(bscanToShow);
       for (let y = 0; y < rows; y++) {
-        const row = rotatedBscanToShow[y];
         for (let x = 0; x < cols; x++) {
-          const v = row[x];
+          const v = bscanToShow[x][y];
           const t = clamp((v - min) * inv, 0, 1);
           const idx = (t * 255) | 0;
           const o = idx * 4;
@@ -164,7 +141,6 @@ export default function BscanCanvas() {
         }
       }
 
-      // Put into an offscreen canvas and make ImageBitmap
       const off = document.createElement('canvas');
       off.width = cols;
       off.height = rows;
@@ -177,7 +153,7 @@ export default function BscanCanvas() {
         bmp.close();
         return;
       }
-      // Close previous
+
       bitmapRef.current?.close?.();
       bitmapRef.current = bmp;
 
@@ -193,7 +169,6 @@ export default function BscanCanvas() {
 
   // Redraw when view changes
   useEffect(() => {
-    console.log('tx', tx, 'ty', ty);
     redraw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scale, tx, ty]);
@@ -209,6 +184,8 @@ export default function BscanCanvas() {
       lastY.current = e.clientY;
     };
     const onMove = (e: MouseEvent) => {
+      const inds = getBscanIndexFromMouse(e);
+      setAscanInd(inds?.col ?? 0);
       if (!dragging.current) return;
       const dx = e.clientX - lastX.current;
       const dy = e.clientY - lastY.current;
@@ -289,6 +266,26 @@ export default function BscanCanvas() {
 
     // Draw the “image” at world origin (0,0)
     ctx.drawImage(bmp, 0, 0);
+  };
+
+  const getBscanIndexFromMouse = (e: MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left; // canvas-local CSS px
+    const py = e.clientY - rect.top;
+
+    const wx = (px - tx) / scale;
+    const wy = (py - ty) / scale;
+
+    const col = Math.floor(wx);
+    const row = Math.floor(wy);
+
+    const { rows, cols } = dims; // rows = bitmap height, cols = bitmap width
+    if (col < 0 || col >= cols || row < 0 || row >= rows) return null;
+
+    return { col, row, wx, wy, px, py };
   };
 
   return (
