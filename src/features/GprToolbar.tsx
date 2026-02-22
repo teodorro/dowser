@@ -72,6 +72,7 @@ export default function GprToolbar() {
         }
       }
     }
+    chosen.sort((a, b) => a - b);
     const red = Math.floor(Math.random() * maxRed) + minRed;
     console.log('yellow', chosen, 'red', red);
   };

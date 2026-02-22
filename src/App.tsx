@@ -1,12 +1,12 @@
 import './App.css';
 import GprToolbar from './features/GprToolbar';
 import { Box } from '@mui/material';
-import Bscan from './features/BScan';
 import Ascan from './features/Ascan';
 import Settings from './features/Settings';
 import useUiStore from './stores/ui-store';
 import ErrorNotification from './components/ErrorNotification';
 import BscanFft from './features/BscanFft';
+import BscanCanvas from './features/BScanCanvas';
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
@@ -35,7 +35,8 @@ function App() {
         }}
       >
         <Settings></Settings>
-        {!fftMode && <Bscan rotated={true}></Bscan>}
+        {/* {!fftMode && <Bscan rotated={true}></Bscan>} */}
+        {!fftMode && <BscanCanvas></BscanCanvas>}
         {fftMode && <BscanFft rotated={true}></BscanFft>}
         {!ascanHidden && <Ascan></Ascan>}
       </Box>
