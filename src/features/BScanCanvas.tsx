@@ -3,27 +3,11 @@ import useBscanStore from '../stores/bscan-store';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import useDataProcessorStore from '../stores/data-processor-store';
+import getPalette from './get-palette';
 
-function clamp(v: number, a: number, b: number) {
+const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
-}
-
-// Simple “heat-ish” LUT (blue->cyan->green->yellow->red).
-// You can swap this for Jet/Viridis later; LUT keeps it fast.
-function makeLut256(): Uint8ClampedArray {
-  const lut = new Uint8ClampedArray(256 * 4);
-  for (let i = 0; i < 256; i++) {
-    const t = i / 255;
-    const r = clamp(1.5 * t - 0.5, 0, 1);
-    const g = clamp(1.5 - Math.abs(2 * t - 1.0) * 1.5, 0, 1);
-    const b = clamp(0.5 - 1.5 * (t - 0.66), 0, 1);
-    lut[i * 4 + 0] = Math.round(r * 255);
-    lut[i * 4 + 1] = Math.round(g * 255);
-    lut[i * 4 + 2] = Math.round(b * 255);
-    lut[i * 4 + 3] = 255;
-  }
-  return lut;
-}
+};
 
 export default function BscanCanvas() {
   const bscan = useBscanStore.use.bscan();
@@ -49,8 +33,6 @@ export default function BscanCanvas() {
     max: number;
   } | null>(null);
 
-  const lut = useMemo(() => makeLut256(), []);
-
   // Build an ImageBitmap once per bscan (fast to draw).
   const bitmapRef = useRef<ImageBitmap | null>(null);
   const dims = useMemo(() => {
@@ -61,6 +43,13 @@ export default function BscanCanvas() {
 
   const logAmplitudeSelected =
     useVisualSettingsStore.use.logAmplitudeSelected();
+  const logAmplitudeSelected2 =
+    useVisualSettingsStore.use.logAmplitudeSelected2();
+  const selectedPalette = useVisualSettingsStore.use.selectedPalette();
+
+  const lut = useMemo(() => {
+    return getPalette(selectedPalette);
+  }, [selectedPalette]);
 
   useEffect(() => {
     const data = bscanFullAmp;
@@ -76,8 +65,11 @@ export default function BscanCanvas() {
     if (logAmplitudeSelected) {
       data = logAmplitude(data);
     }
+    if (logAmplitudeSelected2) {
+      data = logAmplitude(data);
+    }
     setBscanToShow(data);
-  }, [bscan, logAmplitudeSelected]);
+  }, [bscan, logAmplitudeSelected, logAmplitudeSelected2]);
 
   useEffect(() => {
     if (!bscanToShow.length) return;
