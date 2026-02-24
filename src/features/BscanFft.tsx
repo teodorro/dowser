@@ -23,7 +23,7 @@ export default function BscanFft({ rotated = false }: { rotated?: boolean }) {
   const selectedYAxis = useBscanStore.use.selectedYAxis();
 
   const setBscanToShow = useBscanStore.use.setBscanToShow();
-  const setAscanInd = useBscanStore.use.setAscanInd();
+  const setAscanInd = useBscanStore.use.setIndexAscan();
 
   const logAmplitudeSelected =
     useVisualSettingsStore.use.logAmplitudeSelected();

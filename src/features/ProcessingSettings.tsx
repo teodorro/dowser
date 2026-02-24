@@ -37,7 +37,7 @@ export default function ProcessingSettings() {
   const [polynomialVert, setPolynomialVert] = useState(3);
   const [windowSizeHor, setWindowSizeHor] = useState(5);
   const [polynomialHor, setPolynomialHor] = useState(3);
-  const [subtractType, setSubtractType] = useState('average');
+  const [subtractType, setSubtractType] = useState('median');
   const [windowSizeDewow, setWindowSizeDewow] = useState(7);
 
   const handleSubtractClick = () => {

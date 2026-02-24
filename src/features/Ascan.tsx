@@ -27,7 +27,7 @@ echarts.use([
 
 export default function Ascan() {
   const bscanToShow = useBscanStore.use.bscanToShow();
-  const ascanInd = useBscanStore.use.ascanInd();
+  const indexAscan = useBscanStore.use.indexAscan();
   const selectedYAxis = useBscanStore.use.selectedYAxis();
   const velocity = useBscanStore.use.velocity();
   const dt = useBscanStore.use.dt();
@@ -45,24 +45,24 @@ export default function Ascan() {
   );
 
   const data = useMemo(() => {
-    if (!bscanToShow.length) return [];
-    const a = [...bscanToShow[ascanInd].entries()].map(([idx, val]) => [
+    if (!bscanToShow.length || indexAscan == null) return [];
+    const a = [...bscanToShow[indexAscan].entries()].map(([idx, val]) => [
       val,
-      bscanToShow[ascanInd].length - idx - 1,
+      bscanToShow[indexAscan].length - idx - 1,
     ]);
     return a;
-  }, [bscanToShow, ascanInd]);
+  }, [bscanToShow, indexAscan]);
 
   useEffect(() => {
-    if (bscanToShow.length === 0) {
+    if (bscanToShow.length === 0 || indexAscan == null) {
       setYLabels([]);
     } else if (selectedYAxis === 'time') {
-      const labels = bscanToShow[ascanInd]
+      const labels = bscanToShow[indexAscan]
         .map((_, idx) => Number.parseFloat(idx.toFixed(2)) * dt)
         .reverse();
       setYLabels(labels);
     } else if (selectedYAxis === 'depth') {
-      const labels = bscanToShow[ascanInd]
+      const labels = bscanToShow[indexAscan]
         .map((_, idx) => Number.parseFloat((idx * dt * velocity).toFixed(1)))
         .reverse();
       setYLabels(labels);
@@ -72,6 +72,7 @@ export default function Ascan() {
   }, [bscanToShow, selectedYAxis, velocity]);
 
   const option = useMemo<echarts.EChartsCoreOption>(() => {
+    const n = data.length || 0;
     return {
       tooltip: {
         trigger: 'axis',
@@ -91,14 +92,20 @@ export default function Ascan() {
       },
       xAxis: {
         type: 'value',
-        boundaryGap: false,
         min: minBscan,
         max: maxBscan,
       },
       yAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: yLabels,
+        type: 'value',
+        min: 0,
+        max: Math.max(0, n - 1),
+        axisLabel: {
+          formatter: (v: number) => {
+            const i = Math.round(v);
+            const lab = yLabels[i];
+            return lab == null ? '' : String(lab);
+          },
+        },
       },
       dataZoom: [
         {
@@ -128,11 +135,12 @@ export default function Ascan() {
   return (
     <Box
       sx={{
-        width: '30em',
+        width: '25em',
         height: '100%',
         overflowX: 'auto',
         overflowY: 'hidden',
         borderLeft: '2px solid #444',
+        border: '1px solid #a00',
       }}
     >
       <ReactEChartsCore

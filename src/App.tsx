@@ -7,6 +7,7 @@ import useUiStore from './stores/ui-store';
 import ErrorNotification from './components/ErrorNotification';
 import BscanFft from './features/BscanFft';
 import BscanCanvas from './features/BScanCanvas';
+import StatusBar from './features/StatusBar';
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
@@ -28,7 +29,7 @@ function App() {
       <Box
         sx={{
           width: '100%',
-          height: 'calc(100% - 4em)',
+          height: 'calc(100% - 3em)',
           display: 'flex',
           flexDirection: 'row',
           background: '#fff',
@@ -36,9 +37,33 @@ function App() {
       >
         <Settings></Settings>
         {/* {!fftMode && <Bscan rotated={true}></Bscan>} */}
-        {!fftMode && <BscanCanvas></BscanCanvas>}
+        {/* <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {!fftMode && <BscanCanvas></BscanCanvas>}
+          <StatusBar></StatusBar>
+        </Box>
         {fftMode && <BscanFft rotated={true}></BscanFft>}
-        {!ascanHidden && <Ascan></Ascan>}
+        {!ascanHidden && <Ascan></Ascan>} */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            width: '100%',
+          }}
+        >
+          <Box
+            sx={{
+              height: 'calc(100% - 2em)',
+              display: 'flex',
+              flexDirection: 'row',
+            }}
+          >
+            {!fftMode && <BscanCanvas></BscanCanvas>}
+            {fftMode && <BscanFft rotated={true}></BscanFft>}
+            {!ascanHidden && <Ascan></Ascan>}
+          </Box>
+          <StatusBar></StatusBar>
+        </Box>
       </Box>
       <Box
         sx={{

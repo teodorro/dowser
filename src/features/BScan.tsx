@@ -25,7 +25,7 @@ export default function Bscan({ rotated = false }: { rotated?: boolean }) {
 
   const setBscan = useBscanStore.use.setBscan();
   const setBscanToShow = useBscanStore.use.setBscanToShow();
-  const setAscanInd = useBscanStore.use.setAscanInd();
+  const setAscanInd = useBscanStore.use.setIndexAscan();
 
   const logAmplitudeSelected =
     useVisualSettingsStore.use.logAmplitudeSelected();

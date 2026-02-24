@@ -15,7 +15,8 @@ export default function BscanCanvas() {
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const setBscan = useBscanStore.use.setBscan();
   const setBscanToShow = useBscanStore.use.setBscanToShow();
-  const setAscanInd = useBscanStore.use.setAscanInd();
+  const setIndexAscan = useBscanStore.use.setIndexAscan();
+  const setIndexT = useBscanStore.use.setIndexT();
 
   const operations = useDataProcessorStore.use.operations();
 
@@ -177,7 +178,8 @@ export default function BscanCanvas() {
     };
     const onMove = (e: MouseEvent) => {
       const inds = getBscanIndexFromMouse(e);
-      setAscanInd(inds?.col ?? 0);
+      setIndexAscan(inds?.col);
+      setIndexT(inds?.row);
       if (!dragging.current) return;
       const dx = e.clientX - lastX.current;
       const dy = e.clientY - lastY.current;
