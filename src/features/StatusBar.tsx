@@ -21,26 +21,37 @@ export default function StatusBar() {
     <Box
       sx={{
         height: '2em',
-        border: '1px solid #444',
         display: 'flex',
         flexDirection: 'row',
+        alignItems: 'center',
+        background: '#eee',
         gap: 0.5,
       }}
     >
-      <Typography sx={{ color: '#444', px: 1 }}>
+      <Typography
+        sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
+      >
         x: {indexAscan == null ? '' : Math.round(indexAscan * dx * 100) / 100}
       </Typography>
 
-      <Typography sx={{ color: '#444', px: 1 }}>
+      <Typography
+        sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
+      >
         t: {indexT == null ? '' : indexT * dt}
       </Typography>
 
-      <Typography sx={{ color: '#444', px: 1 }}>
+      <Typography
+        sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
+      >
         z:{' '}
         {indexT == null ? '' : Math.round(indexT * dt * velocity * 100) / 100}
       </Typography>
 
-      <Typography sx={{ color: '#444', px: 1 }}>amp: {getAmp()}</Typography>
+      <Typography
+        sx={{ color: '#444', px: 1, width: '6em', textAlign: 'left' }}
+      >
+        amp: {getAmp()}
+      </Typography>
     </Box>
   );
 }
