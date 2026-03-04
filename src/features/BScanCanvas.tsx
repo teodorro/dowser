@@ -359,10 +359,17 @@ export default function BscanCanvas() {
   const drawRulers = (ctx: CanvasRenderingContext2D) => {
     if (bscan == null || bscan.length === 0) return;
     const vp = vpRef.current;
-    const tMin = 0;
-    const tMax = bscan[0].length * dt;
-    const tMinPx = 0;
-    const tMaxPx = bitmapRef.current?.height ?? 0;
+    const rows = bscan[0].length;
+
+    const wyMin = clamp((0 - ty) / scale, 0, rows);
+    const wyMax = clamp((vp.h - ty) / scale, 0, rows);
+
+    const tVisMin = wyMin * dt;
+    const tVisMax = wyMax * dt;
+
+    const minLabelPx = 24;
+    const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
+    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
 
     ctx.fillStyle = '#f8f8f8';
     ctx.fillRect(0, vp.y, ruler.left, vp.h);
@@ -370,26 +377,32 @@ export default function BscanCanvas() {
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 1;
 
-    const tScale = d3
+    const tToWy = d3
       .scaleLinear()
-      .domain([tMin, tMax])
-      .range([tMinPx, tMaxPx]);
-    for (let i = 0; i < bscan[0].length; i += 25 * Math.log(scale + 1)) {
-      const t = i * dt;
-      const px = tScale(t);
-      if (px * scale + ty < 0) continue;
+      .domain([0, rows * dt])
+      .range([0, rows]);
+
+    ctx.beginPath();
+    ctx.moveTo(53, wyMin * scale + ty + ruler.top);
+    ctx.lineTo(53, wyMax * scale + ty + ruler.top);
+    ctx.stroke();
+
+    for (const t of ticks) {
+      const wy = tToWy(t);
+      const y = vp.y + (wy * scale + ty);
+
+      if (y < vp.y || y > vp.y + vp.h) continue;
+
       ctx.beginPath();
-      ctx.moveTo(43, px * scale + ty + ruler.top);
-      ctx.lineTo(53, px * scale + ty + ruler.top);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = 'black';
+      ctx.moveTo(48, y);
+      ctx.lineTo(53, y);
       ctx.stroke();
 
       ctx.font = '12px Arial';
       ctx.fillStyle = 'black';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'end';
-      ctx.fillText(String(Math.round(t)), 40, px * scale + ty + ruler.top);
+      ctx.fillText(String(Math.round(t)), 45, y);
     }
   };
 
