@@ -4,6 +4,8 @@ import useVisualSettingsStore from '../stores/visual-settings-store';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import useDataProcessorStore from '../stores/data-processor-store';
 import getPalette from './get-palette';
+import { Box } from '@mui/material';
+import * as d3 from 'd3';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -13,6 +15,10 @@ export default function BscanCanvas() {
   const bscan = useBscanStore.use.bscan();
   const bscanToShow = useBscanStore.use.bscanToShow();
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
+  const dt = useBscanStore.use.dt();
+  // const velocity = useBscanStore.use.velocity();
+  // const dx = useBscanStore.use.dx();
+
   const setBscan = useBscanStore.use.setBscan();
   const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setIndexAscan = useBscanStore.use.setIndexAscan();
@@ -48,6 +54,15 @@ export default function BscanCanvas() {
     useVisualSettingsStore.use.logAmplitudeSelected2();
   const selectedPalette = useVisualSettingsStore.use.selectedPalette();
 
+  const ruler = { left: 56, top: 32, right: 56, bottom: 0 };
+
+  const vpRef = useRef<{ x: number; y: number; w: number; h: number }>({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0,
+  });
+
   const lut = useMemo(() => {
     return getPalette(selectedPalette);
   }, [selectedPalette]);
@@ -57,8 +72,11 @@ export default function BscanCanvas() {
     setBscan(data);
     lastX.current = 0;
     lastY.current = 0;
+    setScale(1);
     setTx(0);
     setTy(0);
+    // setTx(ruler.left);
+    // setTy(ruler.top);
   }, [bscanFullAmp, operations]);
 
   useEffect(() => {
@@ -173,18 +191,20 @@ export default function BscanCanvas() {
 
     const onDown = (e: MouseEvent) => {
       dragging.current = true;
-      lastX.current = e.clientX;
-      lastY.current = e.clientY;
+      const { sx, sy } = toViewportLocal(e, canvas);
+      lastX.current = sx;
+      lastY.current = sy;
     };
     const onMove = (e: MouseEvent) => {
+      const { sx, sy } = toViewportLocal(e, canvas);
       const inds = getBscanIndexFromMouse(e);
       setIndexAscan(inds?.col);
       setIndexT(inds?.row);
       if (!dragging.current) return;
-      const dx = e.clientX - lastX.current;
-      const dy = e.clientY - lastY.current;
-      lastX.current = e.clientX;
-      lastY.current = e.clientY;
+      const dx = sx - lastX.current;
+      const dy = sy - lastY.current;
+      lastX.current = sx;
+      lastY.current = sy;
       setTx((v) => v + dx);
       setTy((v) => v + dy);
     };
@@ -196,8 +216,10 @@ export default function BscanCanvas() {
       e.preventDefault();
 
       const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left; // mouse in CSS px
-      const my = e.clientY - rect.top;
+      const px = e.clientX - rect.left; // mouse in CSS px
+      const py = e.clientY - rect.top;
+      const mx = px - vpRef.current.x; // viewport-local
+      const my = py - vpRef.current.y; // viewport-local
 
       // Zoom factor
       const zoom = Math.exp(-e.deltaY * 0.001);
@@ -228,6 +250,13 @@ export default function BscanCanvas() {
     };
   }, [scale, tx, ty]);
 
+  const toViewportLocal = (e: MouseEvent, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    return { sx: px - vpRef.current.x, sy: py - vpRef.current.y };
+  };
+
   // Redraw function (draw bitmap with current transform)
   const redraw = () => {
     const canvas = canvasRef.current;
@@ -240,6 +269,8 @@ export default function BscanCanvas() {
     const cssH = canvas.clientHeight;
 
     // Keep canvas crisp on HiDPI
+    // const w = Math.floor(cssW);
+    // const h = Math.floor(cssH);
     const w = Math.floor(cssW * dpr);
     const h = Math.floor(cssH * dpr);
     if (canvas.width !== w || canvas.height !== h) {
@@ -247,19 +278,56 @@ export default function BscanCanvas() {
       canvas.height = h;
     }
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, w, h);
+    const vp = {
+      x: ruler.left,
+      y: ruler.top,
+      w: cssW - ruler.left - ruler.right,
+      h: cssH - ruler.top - ruler.bottom,
+    };
+    vpRef.current = vp;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(vp.x, vp.y, vp.w, vp.h);
+    ctx.clip();
 
     const bmp = bitmapRef.current;
-    if (!bmp) return;
 
-    ctx.imageSmoothingEnabled = false;
+    if (bmp) {
+      ctx.imageSmoothingEnabled = false;
 
-    // Apply pan/zoom; note dpr scale so tx/ty are in CSS pixels
-    ctx.setTransform(scale * dpr, 0, 0, scale * dpr, tx * dpr, ty * dpr);
+      // Apply pan/zoom; note dpr scale so tx/ty are in CSS pixels
+      // ctx.setTransform(scale * dpr, 0, 0, scale * dpr, tx * dpr, ty * dpr);
+      // ctx.setTransform(scale, 0, 0, scale, vp.x + tx, vp.y + ty);
+      ctx.save();
+      ctx.translate(vp.x + tx, vp.y + ty); // CSS px
+      ctx.scale(scale, scale); // CSS px
+      // Draw the “image” at world origin (0,0)
+      ctx.drawImage(bmp, 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
 
-    // Draw the “image” at world origin (0,0)
-    ctx.drawImage(bmp, 0, 0);
+    drawRulers(ctx);
+
+    // console.log(
+    //   'vp.w',
+    //   vp.w,
+    //   'vp.h',
+    //   vp.h,
+    //   'vp.x',
+    //   vp.x,
+    //   'vp.y',
+    //   vp.y,
+    //   'tx',
+    //   tx,
+    //   'ty',
+    //   ty,
+    // );
+    // console.log('start x', (vp.x + tx) * dx, 'start t', (vp.y + ty) * dt);
   };
 
   const getBscanIndexFromMouse = (e: MouseEvent) => {
@@ -270,20 +338,69 @@ export default function BscanCanvas() {
     const px = e.clientX - rect.left; // canvas-local CSS px
     const py = e.clientY - rect.top;
 
-    const wx = (px - tx) / scale;
-    const wy = (py - ty) / scale;
+    // viewport-local screen
+    const sx = px - vpRef.current.x;
+    const sy = py - vpRef.current.y;
+
+    const wx = (sx - tx) / scale;
+    const wy = (sy - ty) / scale;
 
     const col = Math.floor(wx);
     const row = Math.floor(wy);
 
     const { rows, cols } = dims; // rows = bitmap height, cols = bitmap width
     if (col < 0 || col >= cols || row < 0 || row >= rows) return null;
+    if (sx < 0 || sy < 0 || sx > vpRef.current.w || sy > vpRef.current.h)
+      return null;
 
     return { col, row, wx, wy, px, py };
   };
 
+  const drawRulers = (ctx: CanvasRenderingContext2D) => {
+    if (bscan == null || bscan.length === 0) return;
+    const vp = vpRef.current;
+    const tMin = 0;
+    const tMax = bscan[0].length * dt;
+    const tMinPx = 0;
+    const tMaxPx = bitmapRef.current?.height ?? 0;
+
+    ctx.fillStyle = '#f8f8f8';
+    ctx.fillRect(0, vp.y, ruler.left, vp.h);
+
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+
+    const tScale = d3
+      .scaleLinear()
+      .domain([tMin, tMax])
+      .range([tMinPx, tMaxPx]);
+    for (let i = 0; i < bscan[0].length; i += 25 * Math.log(scale + 1)) {
+      const t = i * dt;
+      const px = tScale(t);
+      if (px * scale + ty < 0) continue;
+      ctx.beginPath();
+      ctx.moveTo(43, px * scale + ty + ruler.top);
+      ctx.lineTo(53, px * scale + ty + ruler.top);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'black';
+      ctx.stroke();
+
+      ctx.font = '12px Arial';
+      ctx.fillStyle = 'black';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'end';
+      ctx.fillText(String(Math.round(t)), 40, px * scale + ty + ruler.top);
+    }
+  };
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+      }}
+    >
       <canvas
         ref={canvasRef}
         style={{
@@ -291,9 +408,9 @@ export default function BscanCanvas() {
           height: '100%',
           display: 'block',
           cursor: 'grab',
-          background: '#111',
+          background: '#fff',
         }}
       />
-    </div>
+    </Box>
   );
 }

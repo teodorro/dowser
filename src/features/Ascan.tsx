@@ -46,6 +46,9 @@ export default function Ascan() {
 
   const data = useMemo(() => {
     if (!bscanToShow.length || indexAscan == null) return [];
+    if (bscanToShow[indexAscan] == null) {
+      return [];
+    }
     const a = [...bscanToShow[indexAscan].entries()].map(([idx, val]) => [
       val,
       bscanToShow[indexAscan].length - idx - 1,
