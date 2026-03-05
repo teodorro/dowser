@@ -16,8 +16,8 @@ export default function BscanCanvas() {
   const bscanToShow = useBscanStore.use.bscanToShow();
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const dt = useBscanStore.use.dt();
-  // const velocity = useBscanStore.use.velocity();
-  // const dx = useBscanStore.use.dx();
+  const velocity = useBscanStore.use.velocity();
+  const dx = useBscanStore.use.dx();
 
   const setBscan = useBscanStore.use.setBscan();
   const setBscanToShow = useBscanStore.use.setBscanToShow();
@@ -54,7 +54,7 @@ export default function BscanCanvas() {
     useVisualSettingsStore.use.logAmplitudeSelected2();
   const selectedPalette = useVisualSettingsStore.use.selectedPalette();
 
-  const ruler = { left: 56, top: 32, right: 56, bottom: 0 };
+  const ruler = { left: 56, top: 46, right: 56, bottom: 0 };
 
   const vpRef = useRef<{ x: number; y: number; w: number; h: number }>({
     x: 0,
@@ -75,8 +75,6 @@ export default function BscanCanvas() {
     setScale(1);
     setTx(0);
     setTy(0);
-    // setTx(ruler.left);
-    // setTy(ruler.top);
   }, [bscanFullAmp, operations]);
 
   useEffect(() => {
@@ -268,9 +266,6 @@ export default function BscanCanvas() {
     const cssW = canvas.clientWidth;
     const cssH = canvas.clientHeight;
 
-    // Keep canvas crisp on HiDPI
-    // const w = Math.floor(cssW);
-    // const h = Math.floor(cssH);
     const w = Math.floor(cssW * dpr);
     const h = Math.floor(cssH * dpr);
     if (canvas.width !== w || canvas.height !== h) {
@@ -299,12 +294,9 @@ export default function BscanCanvas() {
     if (bmp) {
       ctx.imageSmoothingEnabled = false;
 
-      // Apply pan/zoom; note dpr scale so tx/ty are in CSS pixels
-      // ctx.setTransform(scale * dpr, 0, 0, scale * dpr, tx * dpr, ty * dpr);
-      // ctx.setTransform(scale, 0, 0, scale, vp.x + tx, vp.y + ty);
       ctx.save();
-      ctx.translate(vp.x + tx, vp.y + ty); // CSS px
-      ctx.scale(scale, scale); // CSS px
+      ctx.translate(vp.x + tx, vp.y + ty);
+      ctx.scale(scale, scale);
       // Draw the “image” at world origin (0,0)
       ctx.drawImage(bmp, 0, 0);
       ctx.restore();
@@ -312,22 +304,6 @@ export default function BscanCanvas() {
     ctx.restore();
 
     drawRulers(ctx);
-
-    // console.log(
-    //   'vp.w',
-    //   vp.w,
-    //   'vp.h',
-    //   vp.h,
-    //   'vp.x',
-    //   vp.x,
-    //   'vp.y',
-    //   vp.y,
-    //   'tx',
-    //   tx,
-    //   'ty',
-    //   ty,
-    // );
-    // console.log('start x', (vp.x + tx) * dx, 'start t', (vp.y + ty) * dt);
   };
 
   const getBscanIndexFromMouse = (e: MouseEvent) => {
@@ -360,10 +336,84 @@ export default function BscanCanvas() {
     if (bscan == null || bscan.length === 0) return;
     const vp = vpRef.current;
     const rows = bscan[0].length;
+    const cols = bscan.length;
 
     const wyMin = clamp((0 - ty) / scale, 0, rows);
     const wyMax = clamp((vp.h - ty) / scale, 0, rows);
+    const wxMin = clamp((0 - tx) / scale, 0, cols);
+    const wxMax = clamp((vp.w - tx) / scale, 0, cols);
 
+    drawTimeRuler(ctx, wyMin, wyMax);
+    drawLengthRuler(ctx, wxMin, wxMax);
+    drawDepthRuler(ctx, wyMin, wyMax);
+  };
+
+  const drawLengthRuler = (
+    ctx: CanvasRenderingContext2D,
+    wxMin: number,
+    wxMax: number,
+  ) => {
+    const rows = bscan.length;
+    const vp = vpRef.current;
+    const xVisMin = wxMin * dx;
+    const xVisMax = wxMax * dx;
+
+    const minLabelPx = 92;
+    const maxTicks = Math.max(2, Math.floor(vp.w / minLabelPx));
+    const ticks = d3.ticks(xVisMin, xVisMax, maxTicks);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(vp.x, 0, vp.w, ruler.top);
+
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1;
+
+    const xToWx = d3
+      .scaleLinear()
+      .domain([0, rows * dx])
+      .range([0, rows]);
+
+    ctx.beginPath();
+    ctx.moveTo(wxMin * scale + tx + ruler.left, ruler.top - 3);
+    ctx.lineTo(wxMax * scale + tx + ruler.left, ruler.top - 3);
+    ctx.stroke();
+
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#444';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      'Длина, м',
+      ((wxMax - wxMin) / 2 + wxMin) * scale + tx + ruler.left,
+      ruler.top - 35,
+    );
+
+    for (const t of ticks) {
+      const wx = xToWx(t);
+      const x = vp.x + (wx * scale + tx);
+
+      if (x < vp.x || x > vp.x + vp.w) continue;
+
+      ctx.beginPath();
+      ctx.moveTo(x, ruler.top - 8);
+      ctx.lineTo(x, ruler.top - 3);
+      ctx.stroke();
+
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#444';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(Math.round(t)), x, ruler.top - 16);
+    }
+  };
+
+  const drawTimeRuler = (
+    ctx: CanvasRenderingContext2D,
+    wyMin: number,
+    wyMax: number,
+  ) => {
+    const rows = bscan[0].length;
+    const vp = vpRef.current;
     const tVisMin = wyMin * dt;
     const tVisMax = wyMax * dt;
 
@@ -371,10 +421,10 @@ export default function BscanCanvas() {
     const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
     const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
 
-    ctx.fillStyle = '#f8f8f8';
+    ctx.fillStyle = '#fff';
     ctx.fillRect(0, vp.y, ruler.left, vp.h);
 
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = '#444';
     ctx.lineWidth = 1;
 
     const tToWy = d3
@@ -383,9 +433,21 @@ export default function BscanCanvas() {
       .range([0, rows]);
 
     ctx.beginPath();
-    ctx.moveTo(53, wyMin * scale + ty + ruler.top);
-    ctx.lineTo(53, wyMax * scale + ty + ruler.top);
+    ctx.moveTo(ruler.left - 3, wyMin * scale + ty + ruler.top);
+    ctx.lineTo(ruler.left - 3, wyMax * scale + ty + ruler.top);
     ctx.stroke();
+
+    ctx.save();
+    const x = 12;
+    const y = ((wyMax - wyMin) / 2 + wyMin) * scale - 40 + ty + ruler.top;
+    ctx.translate(x, y);
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#444';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'end';
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Время, нс', 0, 0);
+    ctx.restore();
 
     for (const t of ticks) {
       const wy = tToWy(t);
@@ -394,15 +456,80 @@ export default function BscanCanvas() {
       if (y < vp.y || y > vp.y + vp.h) continue;
 
       ctx.beginPath();
-      ctx.moveTo(48, y);
-      ctx.lineTo(53, y);
+      ctx.moveTo(ruler.left - 8, y);
+      ctx.lineTo(ruler.left - 3, y);
       ctx.stroke();
 
       ctx.font = '12px Arial';
-      ctx.fillStyle = 'black';
+      ctx.fillStyle = '#444';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'end';
-      ctx.fillText(String(Math.round(t)), 45, y);
+      ctx.fillText(String(Math.round(t)), ruler.left - 10, y);
+    }
+  };
+
+  const drawDepthRuler = (
+    ctx: CanvasRenderingContext2D,
+    wyMin: number,
+    wyMax: number,
+  ) => {
+    const rows = bscan[0].length;
+    const vp = vpRef.current;
+    const tVisMin = (wyMin * dt * velocity) / 2;
+    const tVisMax = (wyMax * dt * velocity) / 2;
+
+    const minLabelPx = 34;
+    const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
+    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
+    const step = d3.tickStep(tVisMin, tVisMax, maxTicks);
+    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    const fmt = d3.format(`.${decimals}f`);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(vp.x + vp.w, vp.y, ruler.right, vp.h);
+
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1;
+
+    const tToWy = d3
+      .scaleLinear()
+      .domain([0, (rows * dt * velocity) / 2])
+      .range([0, rows]);
+
+    ctx.beginPath();
+    ctx.moveTo(vp.w + ruler.left + 3, wyMin * scale + ty + ruler.top);
+    ctx.lineTo(vp.w + ruler.left + 3, wyMax * scale + ty + ruler.top);
+    ctx.stroke();
+
+    ctx.save();
+    const x = vp.w + ruler.left + 42;
+    const y = ((wyMax - wyMin) / 2 + wyMin) * scale - 40 + ty + ruler.top;
+    ctx.translate(x, y);
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#444';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'end';
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Глубина, м', 0, 0);
+    ctx.restore();
+
+    for (const t of ticks) {
+      const wy = tToWy(t);
+      const y = vp.y + (wy * scale + ty);
+      const label = fmt(t);
+
+      if (y < vp.y || y > vp.y + vp.h) continue;
+
+      ctx.beginPath();
+      ctx.moveTo(vp.w + ruler.left + 8, y);
+      ctx.lineTo(vp.w + ruler.left + 3, y);
+      ctx.stroke();
+
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#444';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'start';
+      ctx.fillText(label, vp.w + ruler.left + 15, y);
     }
   };
 
