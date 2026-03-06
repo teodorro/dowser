@@ -55,6 +55,11 @@ export default function Settings() {
           py: '0.25em',
           px: '1em',
           width: '100%',
+          background: '#fafafa',
+          color: 'primary.main',
+          borderBottom: '1px solid #888',
+          marginBottom: '1em',
+          boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.25)',
         }}
       >
         <IconButton
