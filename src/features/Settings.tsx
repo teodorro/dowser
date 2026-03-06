@@ -75,6 +75,7 @@ export default function Settings() {
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
+        disableScrollLock
         slotProps={{
           list: {
             'aria-labelledby': 'basic-button',

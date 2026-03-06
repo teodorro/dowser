@@ -27,6 +27,7 @@ export default function BscanCanvas() {
   const operations = useDataProcessorStore.use.operations();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const redrawRef = useRef<() => void>(() => {});
 
   const [scale, setScale] = useState(1);
   const [tx, setTx] = useState(0);
@@ -66,6 +67,14 @@ export default function BscanCanvas() {
   const lut = useMemo(() => {
     return getPalette(selectedPalette);
   }, [selectedPalette]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(() => redrawRef.current());
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const data = bscanFullAmp;
@@ -116,11 +125,25 @@ export default function BscanCanvas() {
 
       let min = valueRange?.min ?? Infinity;
       let max = valueRange?.max ?? -Infinity;
+      // if (!valueRange) {
+      //   for (let y = 0; y < rows; y++) {
+      //     const row = bscanToShow[y];
+      //     for (let x = 0; x < cols; x++) {
+      //       const v = row[x];
+      //       if (v < min) min = v;
+      //       if (v > max) max = v;
+      //     }
+      //   }
+      //   if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) {
+      //     min = 0;
+      //     max = 1;
+      //   }
+      // }
       if (!valueRange) {
-        for (let y = 0; y < rows; y++) {
-          const row = bscanToShow[y];
-          for (let x = 0; x < cols; x++) {
-            const v = row[x];
+        for (let y = 0; y < cols; y++) {
+          const col = bscanToShow[y];
+          for (let x = 0; x < rows; x++) {
+            const v = col[x];
             if (v < min) min = v;
             if (v > max) max = v;
           }
@@ -305,6 +328,8 @@ export default function BscanCanvas() {
 
     drawRulers(ctx);
   };
+
+  redrawRef.current = redraw;
 
   const getBscanIndexFromMouse = (e: MouseEvent) => {
     const canvas = canvasRef.current;

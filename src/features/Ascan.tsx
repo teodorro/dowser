@@ -142,8 +142,7 @@ export default function Ascan() {
         height: '100%',
         overflowX: 'auto',
         overflowY: 'hidden',
-        borderLeft: '2px solid #444',
-        border: '1px solid #a00',
+        borderLeft: '1px solid #444',
       }}
     >
       <ReactEChartsCore

@@ -6,7 +6,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { FolderOpen, Menu, WidthNormal, WidthWide } from '@mui/icons-material';
+import { FolderOpen, WidthNormal, WidthWide } from '@mui/icons-material';
 import UndoRedo from './UndoRedo';
 import { loadDataFile } from '../read-file/load-data-file';
 import useUiStore from '../stores/ui-store';
@@ -57,26 +57,6 @@ export default function GprToolbar() {
     }
   };
 
-  const calcCarrots = () => {
-    const min = 1;
-    const max = 35;
-    const minRed = 1;
-    const maxRed = 54;
-    const chosen: number[] = [];
-    for (let i = 0; i < 7; i++) {
-      while (true) {
-        const x = Math.floor(Math.random() * max) + min;
-        if (chosen.every((y) => y !== x)) {
-          chosen.push(x);
-          break;
-        }
-      }
-    }
-    chosen.sort((a, b) => a - b);
-    const red = Math.floor(Math.random() * maxRed) + minRed;
-    console.log('yellow', chosen, 'red', red);
-  };
-
   return (
     <Box sx={{ flexGrow: 1, height: '3em' }}>
       <AppBar position="static" sx={{ height: '3em' }}>
@@ -111,25 +91,6 @@ export default function GprToolbar() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {filename}
           </Typography>
-          {/* <IconButton
-            size="medium"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 0.5 }}
-          >
-            <DarkMode></DarkMode>
-          </IconButton> */}
-          <IconButton
-            size="medium"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 0.5 }}
-            onClick={calcCarrots}
-          >
-            <Menu />
-          </IconButton>
           <IconButton
             size="medium"
             edge="start"

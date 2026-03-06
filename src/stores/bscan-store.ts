@@ -30,26 +30,10 @@ interface IBscanStore {
 }
 
 const useBscanStoreBase = create<IBscanStore>((set) => ({
-  bscan: [
-    [1, 20, 30],
-    [20, 1, 60],
-    [30, 60, 1],
-  ],
-  bscanToShow: [
-    [1, 20, 30],
-    [20, 1, 60],
-    [30, 60, 1],
-  ],
-  bscanFullAmp: [
-    [1, 20, 30],
-    [20, 1, 60],
-    [30, 60, 1],
-  ],
-  bscanFft: [
-    [1, 20, 30],
-    [20, 1, 60],
-    [30, 60, 1],
-  ],
+  bscan: [],
+  bscanToShow: [],
+  bscanFullAmp: [],
+  bscanFft: [],
   d: 1,
   dx: 0.1,
   dt: 1,
