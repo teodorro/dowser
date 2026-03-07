@@ -10,3 +10,5 @@ export const subtractMedian = (data: number[][]): number[][] => {
   });
   return processedData;
 };
+
+export default subtractMedian;

@@ -1,17 +1,28 @@
 import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material';
-import React from 'react';
-import DataSettings from './DataSettings';
-import VisualSettings from './VisualSettings';
-import ProcessingSettings from './ProcessingSettings';
+import React, { useState } from 'react';
+import DataSettings from './tabs/DataSettings';
+import VisualSettings from './tabs/VisualSettings';
+import ProcessingSettings from './tabs/ProcessingSettings';
+import SpectrumSettings from './tabs/SpectrumSettings';
 import { Menu as MenuIcon } from '@mui/icons-material';
+import useUiStore from '../stores/ui-store';
+import getFftBscan from '../processing/data-processing/get-fft-bscan';
+import useBscanStore from '../stores/bscan-store';
 
 export default function Settings() {
   const SIZES = 'Размеры';
   const PROCESSING = 'Обработка данных';
+  const SPECTRUM = 'Спектр';
   const VISUAL = 'Визуальные настройки';
 
-  const [activeTab, setActiveTab] = React.useState<string>(SIZES);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const setFftMode = useUiStore.use.setFftMode();
+  const fftMode = useUiStore.use.fftMode();
+
+  const bscan = useBscanStore.use.bscan();
+  const setBscanFft = useBscanStore.use.setBscanFft();
+
+  const [activeTab, setActiveTab] = useState<string>(SIZES);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -25,16 +36,34 @@ export default function Settings() {
   const handleSizesClose = () => {
     setActiveTab(SIZES);
     setAnchorEl(null);
+    if (fftMode) {
+      setFftMode(false);
+    }
   };
 
   const handleProcessingClose = () => {
     setActiveTab(PROCESSING);
     setAnchorEl(null);
+    if (fftMode) {
+      setFftMode(false);
+    }
+  };
+
+  const handleSpectrumClose = () => {
+    setActiveTab(SPECTRUM);
+    setAnchorEl(null);
+    if (!fftMode) {
+      setFftMode(true);
+      setBscanFft(getFftBscan(bscan).bscan);
+    }
   };
 
   const handleVisualClose = () => {
     setActiveTab(VISUAL);
     setAnchorEl(null);
+    // if (fftMode) {
+    //   setFftMode(false);
+    // }
   };
 
   return (
@@ -89,10 +118,12 @@ export default function Settings() {
       >
         <MenuItem onClick={handleSizesClose}>{SIZES}</MenuItem>
         <MenuItem onClick={handleProcessingClose}>{PROCESSING}</MenuItem>
+        <MenuItem onClick={handleSpectrumClose}>{SPECTRUM}</MenuItem>
         <MenuItem onClick={handleVisualClose}>{VISUAL}</MenuItem>
       </Menu>
       {activeTab === SIZES && <DataSettings></DataSettings>}
       {activeTab === PROCESSING && <ProcessingSettings></ProcessingSettings>}
+      {activeTab === SPECTRUM && <SpectrumSettings></SpectrumSettings>}
       {activeTab === VISUAL && <VisualSettings></VisualSettings>}
     </Box>
   );

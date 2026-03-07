@@ -48,7 +48,7 @@ export default function StatusBar() {
       </Typography>
 
       <Typography
-        sx={{ color: '#444', px: 1, width: '7em', textAlign: 'left' }}
+        sx={{ color: '#444', px: 1, width: '10em', textAlign: 'left' }}
       >
         amp: {getAmp()}
       </Typography>

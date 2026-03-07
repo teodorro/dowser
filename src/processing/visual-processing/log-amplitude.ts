@@ -4,3 +4,5 @@ export const logAmplitude = (data: number[][]): number[][] => {
   );
   return processedData;
 };
+
+export default logAmplitude;

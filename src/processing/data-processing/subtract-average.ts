@@ -9,3 +9,5 @@ export const subtractAverage = (data: number[][]): number[][] => {
   });
   return processedData;
 };
+
+export default subtractAverage;

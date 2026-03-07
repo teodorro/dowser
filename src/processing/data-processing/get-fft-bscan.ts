@@ -13,3 +13,5 @@ export const getFftBscan = (
   }
   return { bscan: fftBscan, complexBins: bins };
 };
+
+export default getFftBscan;

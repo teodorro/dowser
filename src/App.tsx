@@ -5,7 +5,7 @@ import Ascan from './features/Ascan';
 import Settings from './features/Settings';
 import useUiStore from './stores/ui-store';
 import ErrorNotification from './components/ErrorNotification';
-import BscanFft from './features/BscanFft';
+import BscanFftCanvas from './features/BScanFftCanvas';
 import BscanCanvas from './features/BScanCanvas';
 import StatusBar from './features/StatusBar';
 import useBscanStore from './stores/bscan-store';
@@ -39,13 +39,6 @@ function App() {
         }}
       >
         {isDataLoaded && <Settings></Settings>}
-        {/* {!fftMode && <Bscan rotated={true}></Bscan>} */}
-        {/* <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {!fftMode && <BscanCanvas></BscanCanvas>}
-          <StatusBar></StatusBar>
-        </Box>
-        {fftMode && <BscanFft rotated={true}></BscanFft>}
-        {!ascanHidden && <Ascan></Ascan>} */}
         {isDataLoaded && (
           <Box
             sx={{
@@ -63,7 +56,7 @@ function App() {
               }}
             >
               {!fftMode && <BscanCanvas></BscanCanvas>}
-              {fftMode && <BscanFft rotated={true}></BscanFft>}
+              {fftMode && <BscanFftCanvas></BscanFftCanvas>}
               {!ascanHidden && <Ascan></Ascan>}
             </Box>
             <StatusBar></StatusBar>

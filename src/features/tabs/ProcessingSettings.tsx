@@ -5,27 +5,21 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import { BlurOn, GraphicEq, Remove } from '@mui/icons-material';
-import useBscanStore from '../stores/bscan-store';
-import { subtractAverage } from '../processing/data-processing/subtract-average';
-import { useUndoRedoStore } from '../stores/undo-redo-store';
+import { BlurLinear, Remove } from '@mui/icons-material';
+import useBscanStore from '../../stores/bscan-store';
+import { subtractAverage } from '../../processing/data-processing/subtract-average';
+import { useUndoRedoStore } from '../../stores/undo-redo-store';
 import { useShallow } from 'zustand/shallow';
-import { savGolFilter } from '../processing/data-processing/sav-gol-fliter';
+import { savGolFilter } from '../../processing/data-processing/sav-gol-fliter';
 import { useState } from 'react';
-import useUiStore from '../stores/ui-store';
-import { getFftBscan } from '../processing/data-processing/get-fft-bscan';
-import { subtractMedian } from '../processing/data-processing/subtract-median';
-import { dewow } from '../processing/data-processing/dewow';
+import { subtractMedian } from '../../processing/data-processing/subtract-median';
+import { dewow } from '../../processing/data-processing/dewow';
 
 export default function ProcessingSettings() {
   const minSavitzkyGolayWindowSize = 5;
 
   const bscan = useBscanStore.use.bscan();
   const setBscan = useBscanStore.use.setBscan();
-  const setBscanFft = useBscanStore.use.setBscanFft();
-
-  const fftMode = useUiStore.use.fftMode();
-  const setFftMode = useUiStore.use.setFftMode();
 
   const { addOperation } = useUndoRedoStore(
     useShallow((s) => ({
@@ -38,7 +32,7 @@ export default function ProcessingSettings() {
   const [windowSizeHor, setWindowSizeHor] = useState(5);
   const [polynomialHor, setPolynomialHor] = useState(3);
   const [subtractType, setSubtractType] = useState('median');
-  const [windowSizeDewow, setWindowSizeDewow] = useState(7);
+  const [windowSizeDewow, setWindowSizeDewow] = useState(21);
 
   const handleSubtractClick = () => {
     if (subtractType === 'average') {
@@ -101,13 +95,6 @@ export default function ProcessingSettings() {
         getOddNumber(v + 1, defaultVal),
         minSavitzkyGolayWindowSize,
       );
-  };
-
-  const handleFourierAnalysisClick = () => {
-    const data = getFftBscan(bscan);
-    // addOperation({ title: 'Анализ Фурье', bscan: data }, [...bscan]);
-    setBscanFft(data.bscan);
-    setFftMode(!fftMode);
   };
 
   const handleChangeSubtractType = (
@@ -175,8 +162,12 @@ export default function ProcessingSettings() {
         <Box
           sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5, pb: 0 }}
         >
-          <IconButton aria-label="delete" onClick={handleVertSmoothClick}>
-            <BlurOn />
+          <IconButton
+            aria-label="delete"
+            onClick={handleVertSmoothClick}
+            sx={{ rotate: '90deg' }}
+          >
+            <BlurLinear />
           </IconButton>
           <Box>Усреднение (С-Г) вертикальное </Box>
         </Box>
@@ -232,7 +223,7 @@ export default function ProcessingSettings() {
           }}
         >
           <IconButton aria-label="delete" onClick={handleHorSmoothClick}>
-            <BlurOn />
+            <BlurLinear />
           </IconButton>
           <Box>Усреднение (С-Г) горизонтальное </Box>
         </Box>
@@ -275,18 +266,6 @@ export default function ProcessingSettings() {
             sx={{ display: 'flex', margin: '0.5em' }}
           />
         </Box>
-      </Box>
-      <Box
-        sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5, pb: 0 }}
-      >
-        <IconButton
-          aria-label="graphic-eq"
-          sx={{ color: fftMode ? 'red' : 'inherit' }}
-          onClick={handleFourierAnalysisClick}
-        >
-          <GraphicEq />
-        </IconButton>
-        <Box>Анализ Фурье </Box>
       </Box>
     </Box>
   );

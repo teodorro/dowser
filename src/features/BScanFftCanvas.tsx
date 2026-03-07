@@ -1,23 +1,23 @@
+import { Box } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
-import useVisualSettingsStore from '../stores/visual-settings-store';
-import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import useDataProcessorStore from '../stores/data-processor-store';
+import useVisualSettingsStore from '../stores/visual-settings-store';
 import getPalette from './get-palette';
-import { Box } from '@mui/material';
+import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import * as d3 from 'd3';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
 };
 
-export default function BscanCanvas() {
+export default function BscanFftCanvas() {
   const DEFAULT_SCALE = 2;
-  const bscan = useBscanStore.use.bscan();
+  const bscanFft = useBscanStore.use.bscanFft();
   const bscanToShow = useBscanStore.use.bscanToShow();
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
+  const bscan = useBscanStore.use.bscan();
   const dt = useBscanStore.use.dt();
-  const velocity = useBscanStore.use.velocity();
   const dx = useBscanStore.use.dx();
 
   const setBscan = useBscanStore.use.setBscan();
@@ -50,13 +50,12 @@ export default function BscanCanvas() {
     return { rows, cols };
   }, [bscanToShow]);
 
-  const logAmplitudeSelected =
-    useVisualSettingsStore.use.logAmplitudeSelected();
-  const logAmplitudeSelected2 =
-    useVisualSettingsStore.use.logAmplitudeSelected2();
-  const selectedPalette = useVisualSettingsStore.use.selectedPalette();
+  const logAmplitudeSelectedSpectrum =
+    useVisualSettingsStore.use.logAmplitudeSelectedSpectrum();
+  const selectedPaletteSpectrum =
+    useVisualSettingsStore.use.selectedPaletteSpectrum();
 
-  const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
+  const ruler = { left: 56, top: 46, right: 0, bottom: 0 };
 
   const vpRef = useRef<{ x: number; y: number; w: number; h: number }>({
     x: 0,
@@ -66,8 +65,8 @@ export default function BscanCanvas() {
   });
 
   const lut = useMemo(() => {
-    return getPalette(selectedPalette);
-  }, [selectedPalette]);
+    return getPalette(selectedPaletteSpectrum);
+  }, [selectedPaletteSpectrum]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -88,15 +87,16 @@ export default function BscanCanvas() {
   }, [bscanFullAmp, operations]);
 
   useEffect(() => {
-    let data = bscan;
-    if (logAmplitudeSelected) {
-      data = logAmplitude(data);
-    }
-    if (logAmplitudeSelected2) {
+    setBscanToShow(bscanFft);
+  }, [bscanFft]);
+
+  useEffect(() => {
+    let data = bscanFft;
+    if (logAmplitudeSelectedSpectrum) {
       data = logAmplitude(data);
     }
     setBscanToShow(data);
-  }, [bscan, logAmplitudeSelected, logAmplitudeSelected2]);
+  }, [bscanFft, logAmplitudeSelectedSpectrum]);
 
   useEffect(() => {
     if (!bscanToShow.length) return;
@@ -190,7 +190,7 @@ export default function BscanCanvas() {
   useEffect(() => {
     redraw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scale, tx, ty, dx, dt, velocity]);
+  }, [scale, tx, ty, dx]);
 
   // Mouse interactions: pan + wheel zoom
   useEffect(() => {
@@ -257,6 +257,13 @@ export default function BscanCanvas() {
       canvas.removeEventListener('wheel', onWheel);
     };
   }, [scale, tx, ty]);
+
+  const fftFreqAxisHalf = (N: number, dt: number): number[] => {
+    const fs = (1 / dt) * 1000; // GHz
+    const half = Math.floor(N);
+    const df = fs / N;
+    return Array.from({ length: half }, (_, k) => k * df);
+  };
 
   const toViewportLocal = (e: MouseEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
@@ -347,17 +354,16 @@ export default function BscanCanvas() {
   const drawRulers = (ctx: CanvasRenderingContext2D) => {
     if (bscan == null || bscan.length === 0) return;
     const vp = vpRef.current;
-    const rows = bscan[0].length;
-    const cols = bscan.length;
+    const cols = bscanFft.length;
+    const rows = fftFreqAxisHalf(bscanFft[0].length, dt);
 
-    const wyMin = clamp((0 - ty) / scale, 0, rows);
-    const wyMax = clamp((vp.h - ty) / scale, 0, rows);
+    const wyMin = clamp((0 - ty) / scale, 0, rows.length);
+    const wyMax = clamp((vp.h - ty) / scale, 0, rows.length);
     const wxMin = clamp((0 - tx) / scale, 0, cols);
     const wxMax = clamp((vp.w - tx) / scale, 0, cols);
 
-    drawTimeRuler(ctx, wyMin, wyMax);
+    drawFrequencyRuler(ctx, wyMin, wyMax, rows);
     drawLengthRuler(ctx, wxMin, wxMax);
-    drawDepthRuler(ctx, wyMin, wyMax);
   };
 
   const drawLengthRuler = (
@@ -365,7 +371,7 @@ export default function BscanCanvas() {
     wxMin: number,
     wxMax: number,
   ) => {
-    const rows = bscan.length;
+    const rows = bscanFft.length;
     const vp = vpRef.current;
     const xVisMin = wxMin * dx;
     const xVisMax = wxMax * dx;
@@ -419,19 +425,20 @@ export default function BscanCanvas() {
     }
   };
 
-  const drawTimeRuler = (
+  const drawFrequencyRuler = (
     ctx: CanvasRenderingContext2D,
     wyMin: number,
     wyMax: number,
+    freqAxis: number[],
   ) => {
-    const rows = bscan[0].length;
+    const rows = bscanFft[0].length;
     const vp = vpRef.current;
-    const tVisMin = wyMin * dt;
-    const tVisMax = wyMax * dt;
+    const fVisMin = freqAxis[Math.floor(wyMin)];
+    const fVisMax = freqAxis[Math.floor(wyMax - 1)];
 
     const minLabelPx = 24;
     const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
-    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
+    const ticks = d3.ticks(fVisMin, fVisMax, maxTicks);
 
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, vp.y, ruler.left, vp.h);
@@ -441,7 +448,7 @@ export default function BscanCanvas() {
 
     const tToWy = d3
       .scaleLinear()
-      .domain([0, rows * dt])
+      .domain([freqAxis[0], freqAxis[freqAxis.length - 1]])
       .range([0, rows]);
 
     ctx.beginPath();
@@ -458,7 +465,7 @@ export default function BscanCanvas() {
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'end';
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Время, нс', 0, 0);
+    ctx.fillText('Частота, МГц', 0, 0);
     ctx.restore();
 
     for (const t of ticks) {
@@ -477,71 +484,6 @@ export default function BscanCanvas() {
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'end';
       ctx.fillText(String(Math.round(t)), ruler.left - 10, y);
-    }
-  };
-
-  const drawDepthRuler = (
-    ctx: CanvasRenderingContext2D,
-    wyMin: number,
-    wyMax: number,
-  ) => {
-    const rows = bscan[0].length;
-    const vp = vpRef.current;
-    const tVisMin = (wyMin * dt * velocity) / 2;
-    const tVisMax = (wyMax * dt * velocity) / 2;
-
-    const minLabelPx = 34;
-    const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
-    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
-    const step = d3.tickStep(tVisMin, tVisMax, maxTicks);
-    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
-    const fmt = d3.format(`.${decimals}f`);
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(vp.x + vp.w, vp.y, ruler.right, vp.h);
-
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 1;
-
-    const tToWy = d3
-      .scaleLinear()
-      .domain([0, (rows * dt * velocity) / 2])
-      .range([0, rows]);
-
-    ctx.beginPath();
-    ctx.moveTo(vp.w + ruler.left + 3, wyMin * scale + ty + ruler.top);
-    ctx.lineTo(vp.w + ruler.left + 3, wyMax * scale + ty + ruler.top);
-    ctx.stroke();
-
-    ctx.save();
-    const x = vp.w + ruler.left + 50;
-    const y = ((wyMax - wyMin) / 2 + wyMin) * scale - 40 + ty + ruler.top;
-    ctx.translate(x, y);
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#444';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'end';
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Глубина, м', 0, 0);
-    ctx.restore();
-
-    for (const t of ticks) {
-      const wy = tToWy(t);
-      const y = vp.y + (wy * scale + ty);
-      const label = fmt(t);
-
-      if (y < vp.y || y > vp.y + vp.h) continue;
-
-      ctx.beginPath();
-      ctx.moveTo(vp.w + ruler.left + 8, y);
-      ctx.lineTo(vp.w + ruler.left + 3, y);
-      ctx.stroke();
-
-      ctx.font = '12px Arial';
-      ctx.fillStyle = '#444';
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'start';
-      ctx.fillText(label, vp.w + ruler.left + 15, y);
     }
   };
 

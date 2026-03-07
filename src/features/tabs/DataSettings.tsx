@@ -1,7 +1,6 @@
-import React from "react";
-import { Box, Button, TextField } from "@mui/material";
-import useBscanStore from "../stores/bscan-store";
-import { Height } from "@mui/icons-material";
+import React from 'react';
+import { Box, TextField } from '@mui/material';
+import useBscanStore from '../../stores/bscan-store';
 
 export default function DataSettings() {
   const speedLight = 0.3;
@@ -10,14 +9,12 @@ export default function DataSettings() {
   const dt = useBscanStore.use.dt();
   const eps = useBscanStore.use.eps();
   const velocity = useBscanStore.use.velocity();
-  const selectedYAxis = useBscanStore.use.selectedYAxis();
 
   const setD = useBscanStore.use.setD();
   const setDx = useBscanStore.use.setDx();
   const setDt = useBscanStore.use.setDt();
   const setEps = useBscanStore.use.setEps();
   const setVelocity = useBscanStore.use.setVelocity();
-  const setSelectedYAxis = useBscanStore.use.setSelectedYAxis();
 
   const onPermittivityChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -39,8 +36,8 @@ export default function DataSettings() {
     val: number | string | undefined,
     defaultVal: number,
   ): number => {
-    if (typeof val === "number") return val;
-    if (typeof val === "string") {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
       const parsed = Number.parseFloat(val);
       if (!Number.isNaN(parsed)) return parsed;
     }
@@ -50,8 +47,8 @@ export default function DataSettings() {
   return (
     <Box
       sx={{
-        height: "100%",
-        background: "#eee",
+        height: '100%',
+        background: '#eee',
       }}
     >
       <TextField
@@ -62,7 +59,7 @@ export default function DataSettings() {
         type="number"
         inputProps={{ step: 0.05, min: 0.05 }}
         onChange={(e) => setD(getNotNaNValue(e.target.value, 1))}
-        sx={{ display: "flex", margin: "0.5em" }}
+        sx={{ display: 'flex', margin: '0.5em' }}
       />
 
       <TextField
@@ -73,7 +70,7 @@ export default function DataSettings() {
         type="number"
         inputProps={{ step: 0.05, min: 0.05 }}
         onChange={(e) => setDx(getNotNaNValue(e.target.value, 1))}
-        sx={{ display: "flex", margin: "0.5em" }}
+        sx={{ display: 'flex', margin: '0.5em' }}
       />
 
       <TextField
@@ -84,7 +81,7 @@ export default function DataSettings() {
         type="number"
         inputProps={{ step: 0.5, min: 0.5 }}
         onChange={(e) => setDt(getNotNaNValue(e.target.value, 1))}
-        sx={{ display: "flex", margin: "0.5em" }}
+        sx={{ display: 'flex', margin: '0.5em' }}
       />
 
       <TextField
@@ -95,7 +92,7 @@ export default function DataSettings() {
         type="number"
         inputProps={{ step: 1, min: 1, max: 81 }}
         onChange={onPermittivityChange}
-        sx={{ display: "flex", margin: "0.5em" }}
+        sx={{ display: 'flex', margin: '0.5em' }}
       />
 
       <TextField
@@ -104,20 +101,10 @@ export default function DataSettings() {
         value={velocity}
         variant="standard"
         type="number"
-        inputProps={{ step: 0.01, min: 0, max: 0.3 }}
+        inputProps={{ step: 0.01, min: 0.03, max: 0.3 }}
         onChange={onVelocityChange}
-        sx={{ display: "flex", margin: "0.5em" }}
+        sx={{ display: 'flex', margin: '0.5em' }}
       />
-
-      <Button
-        variant="outlined"
-        startIcon={<Height />}
-        onClick={() => {
-          setSelectedYAxis(selectedYAxis === "time" ? "depth" : "time");
-        }}
-      >
-        {selectedYAxis === "time" ? "Глубина" : "Время"}
-      </Button>
     </Box>
   );
 }
