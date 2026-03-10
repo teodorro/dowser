@@ -30,10 +30,13 @@ const VisuallyHiddenInput = styled('input')({
 
 export default function GprToolbar() {
   const ascanHidden = useUiStore.use.ascanHidden();
-  const setAscanHidden = useUiStore.use.setAscanHidden();
   const filename = useUiStore.use.filename();
+  const setFftMode = useUiStore.use.setFftMode();
+  const setAscanHidden = useUiStore.use.setAscanHidden();
+  const setActiveTab = useUiStore.use.setActiveTab();
 
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
+  const setBscan = useBscanStore.use.setBscan();
 
   const { clearUndoRedo } = useUndoRedoStore(
     useShallow((s) => ({
@@ -43,6 +46,9 @@ export default function GprToolbar() {
 
   useEffect(() => {
     clearUndoRedo();
+    setBscan(bscanFullAmp);
+    setFftMode(false);
+    setActiveTab('sizes');
   }, [bscanFullAmp]);
 
   const onLoadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {

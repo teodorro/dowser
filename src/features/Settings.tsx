@@ -6,7 +6,7 @@ import ProcessingSettings from './tabs/ProcessingSettings';
 import SpectrumSettings from './tabs/SpectrumSettings';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import useUiStore from '../stores/ui-store';
-import getFftBscan from '../processing/data-processing/get-fft-bscan';
+import { getFftBscan } from '../processing/data-processing/fft-bscan';
 import useBscanStore from '../stores/bscan-store';
 
 export default function Settings() {
@@ -21,7 +21,9 @@ export default function Settings() {
   const bscan = useBscanStore.use.bscan();
   const setBscanFft = useBscanStore.use.setBscanFft();
 
-  const [activeTab, setActiveTab] = useState<string>(SIZES);
+  const activeTab = useUiStore.use.activeTab();
+  const setActiveTab = useUiStore.use.setActiveTab();
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -34,7 +36,7 @@ export default function Settings() {
   };
 
   const handleSizesClose = () => {
-    setActiveTab(SIZES);
+    setActiveTab('sizes');
     setAnchorEl(null);
     if (fftMode) {
       setFftMode(false);
@@ -42,7 +44,7 @@ export default function Settings() {
   };
 
   const handleProcessingClose = () => {
-    setActiveTab(PROCESSING);
+    setActiveTab('processing');
     setAnchorEl(null);
     if (fftMode) {
       setFftMode(false);
@@ -50,7 +52,7 @@ export default function Settings() {
   };
 
   const handleSpectrumClose = () => {
-    setActiveTab(SPECTRUM);
+    setActiveTab('spectrum');
     setAnchorEl(null);
     if (!fftMode) {
       setFftMode(true);
@@ -59,11 +61,8 @@ export default function Settings() {
   };
 
   const handleVisualClose = () => {
-    setActiveTab(VISUAL);
+    setActiveTab('visual');
     setAnchorEl(null);
-    // if (fftMode) {
-    //   setFftMode(false);
-    // }
   };
 
   return (
@@ -121,10 +120,10 @@ export default function Settings() {
         <MenuItem onClick={handleSpectrumClose}>{SPECTRUM}</MenuItem>
         <MenuItem onClick={handleVisualClose}>{VISUAL}</MenuItem>
       </Menu>
-      {activeTab === SIZES && <DataSettings></DataSettings>}
-      {activeTab === PROCESSING && <ProcessingSettings></ProcessingSettings>}
-      {activeTab === SPECTRUM && <SpectrumSettings></SpectrumSettings>}
-      {activeTab === VISUAL && <VisualSettings></VisualSettings>}
+      {activeTab === 'sizes' && <DataSettings></DataSettings>}
+      {activeTab === 'processing' && <ProcessingSettings></ProcessingSettings>}
+      {activeTab === 'spectrum' && <SpectrumSettings></SpectrumSettings>}
+      {activeTab === 'visual' && <VisualSettings></VisualSettings>}
     </Box>
   );
 }

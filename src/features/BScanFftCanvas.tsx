@@ -1,7 +1,6 @@
 import { Box } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
-import useDataProcessorStore from '../stores/data-processor-store';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 import getPalette from './get-palette';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
@@ -13,6 +12,7 @@ const clamp = (v: number, a: number, b: number) => {
 
 export default function BscanFftCanvas() {
   const DEFAULT_SCALE = 2;
+
   const bscanFft = useBscanStore.use.bscanFft();
   const bscanToShow = useBscanStore.use.bscanToShow();
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
@@ -20,12 +20,9 @@ export default function BscanFftCanvas() {
   const dt = useBscanStore.use.dt();
   const dx = useBscanStore.use.dx();
 
-  const setBscan = useBscanStore.use.setBscan();
   const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setIndexAscan = useBscanStore.use.setIndexAscan();
   const setIndexT = useBscanStore.use.setIndexT();
-
-  const operations = useDataProcessorStore.use.operations();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const redrawRef = useRef<() => void>(() => {});
@@ -77,14 +74,12 @@ export default function BscanFftCanvas() {
   }, []);
 
   useEffect(() => {
-    const data = bscanFullAmp;
-    setBscan(data);
     lastX.current = 0;
     lastY.current = 0;
     setScale(DEFAULT_SCALE);
     setTx(0);
     setTy(0);
-  }, [bscanFullAmp, operations]);
+  }, [bscanFullAmp]);
 
   useEffect(() => {
     setBscanToShow(bscanFft);

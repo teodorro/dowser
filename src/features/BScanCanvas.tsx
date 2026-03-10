@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
-import useDataProcessorStore from '../stores/data-processor-store';
 import getPalette from './get-palette';
 import { Box } from '@mui/material';
 import * as d3 from 'd3';
@@ -20,12 +19,9 @@ export default function BscanCanvas() {
   const velocity = useBscanStore.use.velocity();
   const dx = useBscanStore.use.dx();
 
-  const setBscan = useBscanStore.use.setBscan();
   const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setIndexAscan = useBscanStore.use.setIndexAscan();
   const setIndexT = useBscanStore.use.setIndexT();
-
-  const operations = useDataProcessorStore.use.operations();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const redrawRef = useRef<() => void>(() => {});
@@ -78,14 +74,12 @@ export default function BscanCanvas() {
   }, []);
 
   useEffect(() => {
-    const data = bscanFullAmp;
-    setBscan(data);
     lastX.current = 0;
     lastY.current = 0;
     setScale(DEFAULT_SCALE);
     setTx(0);
     setTy(0);
-  }, [bscanFullAmp, operations]);
+  }, [bscanFullAmp]);
 
   useEffect(() => {
     let data = bscan;
