@@ -5,7 +5,10 @@ import useVisualSettingsStore from '../stores/visual-settings-store';
 import getPalette from './get-palette';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import * as d3 from 'd3';
-import { fftFreqAxisHalf } from '../processing/data-processing/fft-bscan';
+import {
+  fftFreqAxisHalf,
+  getFftBscan,
+} from '../processing/data-processing/fft-bscan';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -24,6 +27,7 @@ export default function BscanFftCanvas() {
   const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setIndexAscan = useBscanStore.use.setIndexAscan();
   const setIndexT = useBscanStore.use.setIndexT();
+  const setBscanFft = useBscanStore.use.setBscanFft();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const redrawRef = useRef<() => void>(() => {});
@@ -81,6 +85,10 @@ export default function BscanFftCanvas() {
     setTx(0);
     setTy(0);
   }, [bscanFullAmp]);
+
+  useEffect(() => {
+    setBscanFft(getFftBscan(bscan).bscan);
+  }, [bscan]);
 
   useEffect(() => {
     setBscanToShow(bscanFft);
