@@ -16,7 +16,7 @@ interface IUiStore {
 
 const useUiStoreBase = create<IUiStore>((set) => ({
   filename: 'Dowser',
-  ascanHidden: false,
+  ascanHidden: true,
   fftMode: false,
   activeTab: TabType.SIZES,
 

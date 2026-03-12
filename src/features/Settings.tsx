@@ -84,7 +84,7 @@ export default function Settings() {
   return (
     <Box
       sx={{
-        width: '20em',
+        width: '22em',
         flexShrink: 0,
         height: '100%',
         background: '#eee',
