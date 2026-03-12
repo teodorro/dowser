@@ -5,6 +5,7 @@ import useVisualSettingsStore from '../stores/visual-settings-store';
 import getPalette from './get-palette';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import * as d3 from 'd3';
+import { fftFreqAxisHalf } from '../processing/data-processing/fft-bscan';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -252,13 +253,6 @@ export default function BscanFftCanvas() {
       canvas.removeEventListener('wheel', onWheel);
     };
   }, [scale, tx, ty]);
-
-  const fftFreqAxisHalf = (N: number, dt: number): number[] => {
-    const fs = (1 / dt) * 1000; // GHz
-    const half = Math.floor(N);
-    const df = fs / N;
-    return Array.from({ length: half }, (_, k) => k * df);
-  };
 
   const toViewportLocal = (e: MouseEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();

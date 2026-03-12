@@ -8,6 +8,7 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import useUiStore from '../stores/ui-store';
 import { getFftBscan } from '../processing/data-processing/fft-bscan';
 import useBscanStore from '../stores/bscan-store';
+import TabType from '../types/tab-type';
 
 export default function Settings() {
   const SIZES = 'Размеры';
@@ -36,7 +37,7 @@ export default function Settings() {
   };
 
   const handleSizesClose = () => {
-    setActiveTab('sizes');
+    setActiveTab(TabType.SIZES);
     setAnchorEl(null);
     if (fftMode) {
       setFftMode(false);
@@ -44,7 +45,7 @@ export default function Settings() {
   };
 
   const handleProcessingClose = () => {
-    setActiveTab('processing');
+    setActiveTab(TabType.PROCESSING);
     setAnchorEl(null);
     if (fftMode) {
       setFftMode(false);
@@ -52,7 +53,7 @@ export default function Settings() {
   };
 
   const handleSpectrumClose = () => {
-    setActiveTab('spectrum');
+    setActiveTab(TabType.SPECTRUM);
     setAnchorEl(null);
     if (!fftMode) {
       setFftMode(true);
@@ -61,8 +62,23 @@ export default function Settings() {
   };
 
   const handleVisualClose = () => {
-    setActiveTab('visual');
+    setActiveTab(TabType.VISUAL);
     setAnchorEl(null);
+  };
+
+  const getTabName = (tab: TabType): string => {
+    switch (tab) {
+      case TabType.SIZES:
+        return 'Размеры';
+      case TabType.PROCESSING:
+        return 'Обработка данных';
+      case TabType.SPECTRUM:
+        return 'Спектр';
+      case TabType.VISUAL:
+        return 'Визуальные настройки';
+      default:
+        return '';
+    }
   };
 
   return (
@@ -100,7 +116,7 @@ export default function Settings() {
           <MenuIcon />
         </IconButton>
         <Typography variant="button" component="div" sx={{ flexGrow: 1 }}>
-          {activeTab}
+          {getTabName(activeTab)}
         </Typography>
       </Box>
       <Menu
@@ -120,10 +136,12 @@ export default function Settings() {
         <MenuItem onClick={handleSpectrumClose}>{SPECTRUM}</MenuItem>
         <MenuItem onClick={handleVisualClose}>{VISUAL}</MenuItem>
       </Menu>
-      {activeTab === 'sizes' && <DataSettings></DataSettings>}
-      {activeTab === 'processing' && <ProcessingSettings></ProcessingSettings>}
-      {activeTab === 'spectrum' && <SpectrumSettings></SpectrumSettings>}
-      {activeTab === 'visual' && <VisualSettings></VisualSettings>}
+      {activeTab === TabType.SIZES && <DataSettings></DataSettings>}
+      {activeTab === TabType.PROCESSING && (
+        <ProcessingSettings></ProcessingSettings>
+      )}
+      {activeTab === TabType.SPECTRUM && <SpectrumSettings></SpectrumSettings>}
+      {activeTab === TabType.VISUAL && <VisualSettings></VisualSettings>}
     </Box>
   );
 }

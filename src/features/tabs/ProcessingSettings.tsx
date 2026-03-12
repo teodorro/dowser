@@ -5,20 +5,28 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import { BlurLinear, Remove } from '@mui/icons-material';
+import {
+  BlurLinear,
+  Remove,
+  SignalCellularAlt,
+  StackedBarChart,
+} from '@mui/icons-material';
 import useBscanStore from '../../stores/bscan-store';
 import { subtractAverage } from '../../processing/data-processing/subtract-average';
 import { useUndoRedoStore } from '../../stores/undo-redo-store';
 import { useShallow } from 'zustand/shallow';
 import { savGolFilter } from '../../processing/data-processing/sav-gol-fliter';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { subtractMedian } from '../../processing/data-processing/subtract-median';
 import { dewow } from '../../processing/data-processing/dewow';
+import { bandPassFilter } from '../../processing/data-processing/band-pass-filter';
+import { fftFreqAxisHalf } from '../../processing/data-processing/fft-bscan';
 
 export default function ProcessingSettings() {
   const minSavitzkyGolayWindowSize = 5;
 
   const bscan = useBscanStore.use.bscan();
+  const dt = useBscanStore.use.dt();
   const setBscan = useBscanStore.use.setBscan();
 
   const { addOperation } = useUndoRedoStore(
@@ -33,6 +41,18 @@ export default function ProcessingSettings() {
   const [polynomialHor, setPolynomialHor] = useState(3);
   const [subtractType, setSubtractType] = useState('median');
   const [windowSizeDewow, setWindowSizeDewow] = useState(21);
+  const [lowStopFrequency, setLowStopFrequency] = useState(0);
+  const [lowPassFrequency, setLowPassFrequency] = useState(0);
+  const [highStopFrequency, setHighStopFrequency] = useState(0);
+  const [highPassFrequency, setHighPassFrequency] = useState(0);
+  const [minFrequency, setMinFrequency] = useState(0);
+  const [maxFrequency, setMaxFrequency] = useState(0);
+
+  useEffect(() => {
+    const freqAxis = fftFreqAxisHalf(bscan[0].length, dt);
+    setMinFrequency(Math.floor(freqAxis[0]));
+    setMaxFrequency(Math.floor(freqAxis[freqAxis.length - 1]));
+  }, [dt, bscan]);
 
   const handleSubtractClick = () => {
     if (subtractType === 'average') {
@@ -108,6 +128,28 @@ export default function ProcessingSettings() {
   const handleDewowClick = () => {
     const data = dewow(bscan, windowSizeDewow);
     addOperation({ title: 'Dewow', bscan: data }, [...bscan]);
+    setBscan(data);
+  };
+
+  const handleLowPassClick = () => {
+    const data = bandPassFilter(
+      bscan,
+      { stopHz: lowStopFrequency, passHz: lowPassFrequency },
+      { passHz: minFrequency, stopHz: minFrequency },
+      dt,
+    );
+    addOperation({ title: 'Фильтр нижних частот', bscan: data }, [...bscan]);
+    setBscan(data);
+  };
+
+  const handleHighPassClick = () => {
+    const data = bandPassFilter(
+      bscan,
+      { stopHz: maxFrequency, passHz: maxFrequency },
+      { passHz: highStopFrequency, stopHz: highPassFrequency },
+      dt,
+    );
+    addOperation({ title: 'Фильтр верхних частот', bscan: data }, [...bscan]);
     setBscan(data);
   };
 
@@ -262,6 +304,110 @@ export default function ProcessingSettings() {
             inputProps={{ step: 1, min: 2 }}
             onChange={(e) =>
               setPolynomialHor(getNotNaNValue(e.target.value, 3))
+            }
+            sx={{ display: 'flex', margin: '0.5em' }}
+          />
+        </Box>
+      </Box>
+
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            p: 0.5,
+            pb: 0,
+          }}
+        >
+          <IconButton aria-label="lowPassFilter" onClick={handleLowPassClick}>
+            <StackedBarChart />
+          </IconButton>
+          <Box>Фильтр нижних частот </Box>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            p: 0.5,
+            pt: 0,
+            ml: '2.5em',
+          }}
+        >
+          <TextField
+            id="lowPassStartFrequency"
+            label="Pass frequency"
+            value={lowStopFrequency}
+            variant="standard"
+            type="number"
+            inputProps={{ step: 1, min: 0 }}
+            onChange={(e) =>
+              setLowStopFrequency(getNotNaNValue(e.target.value, minFrequency))
+            }
+            sx={{ display: 'flex', margin: '0.5em' }}
+          />
+          <TextField
+            id="lowPassEndFrequency"
+            label="Stop frequency"
+            value={lowPassFrequency}
+            variant="standard"
+            type="number"
+            inputProps={{ step: 1, min: lowStopFrequency }}
+            onChange={(e) =>
+              setLowPassFrequency(getNotNaNValue(e.target.value, maxFrequency))
+            }
+            sx={{ display: 'flex', margin: '0.5em' }}
+          />
+        </Box>
+      </Box>
+
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            p: 0.5,
+            pb: 0,
+          }}
+        >
+          <IconButton aria-label="highPassFilter" onClick={handleHighPassClick}>
+            <SignalCellularAlt />
+          </IconButton>
+          <Box>Фильтр верхних частот </Box>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            p: 0.5,
+            pt: 0,
+            ml: '2.5em',
+          }}
+        >
+          <TextField
+            id="highPassStartFrequency"
+            label="Pass frequency"
+            value={highStopFrequency}
+            variant="standard"
+            type="number"
+            inputProps={{ step: 1, min: 0 }}
+            onChange={(e) =>
+              setHighStopFrequency(getNotNaNValue(e.target.value, minFrequency))
+            }
+            sx={{ display: 'flex', margin: '0.5em' }}
+          />
+          <TextField
+            id="highPassEndFrequency"
+            label="Stop frequency"
+            value={highPassFrequency}
+            variant="standard"
+            type="number"
+            inputProps={{ step: 1, min: highStopFrequency }}
+            onChange={(e) =>
+              setHighPassFrequency(getNotNaNValue(e.target.value, maxFrequency))
             }
             sx={{ display: 'flex', margin: '0.5em' }}
           />

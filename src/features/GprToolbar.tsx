@@ -15,6 +15,7 @@ import { useShallow } from 'zustand/shallow';
 import { showError } from '../utils/show-error';
 import { useEffect } from 'react';
 import useBscanStore from '../stores/bscan-store';
+import TabType from '../types/tab-type';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -48,7 +49,7 @@ export default function GprToolbar() {
     clearUndoRedo();
     setBscan(bscanFullAmp);
     setFftMode(false);
-    setActiveTab('sizes');
+    setActiveTab(TabType.SIZES);
   }, [bscanFullAmp]);
 
   const onLoadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
