@@ -1,19 +1,33 @@
 import { Box, Typography } from '@mui/material';
 import useBscanStore from '../stores/bscan-store';
+import { fftFreqAxisHalf } from '../processing/data-processing/fft-bscan';
+import { useEffect, useState } from 'react';
+import useUiStore from '../stores/ui-store';
 
 export default function StatusBar() {
   const indexAscan = useBscanStore.use.indexAscan();
   const indexT = useBscanStore.use.indexT();
-  const bscanToShow = useBscanStore.use.bscanToShow();
+  const bscan = useBscanStore.use.bscan();
+  const bscanFft = useBscanStore.use.bscanFft();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
   const velocity = useBscanStore.use.velocity();
+
+  const fftMode = useUiStore.use.fftMode();
+
+  const [freqs, setFreqs] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (bscanFft == null || bscanFft.length === 0) return;
+    const freqs = fftFreqAxisHalf(bscanFft[0].length, dt);
+    setFreqs(freqs);
+  }, [bscanFft, dt]);
 
   const getAmp = () => {
     const a =
       indexAscan == null || indexT == null
         ? ''
-        : Math.round(bscanToShow[indexAscan][indexT] * 100) / 100;
+        : Math.round(bscan[indexAscan][indexT] * 100) / 100;
     return a;
   };
 
@@ -34,18 +48,29 @@ export default function StatusBar() {
         x: {indexAscan == null ? '' : Math.round(indexAscan * dx * 100) / 100}
       </Typography>
 
-      <Typography
-        sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
-      >
-        t: {indexT == null ? '' : indexT * dt}
-      </Typography>
+      {!fftMode && (
+        <Typography
+          sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
+        >
+          t: {indexT == null ? '' : indexT * dt}
+        </Typography>
+      )}
 
-      <Typography
-        sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
-      >
-        z:{' '}
-        {indexT == null ? '' : Math.round(indexT * dt * velocity * 100) / 100}
-      </Typography>
+      {!fftMode && (
+        <Typography
+          sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
+        >
+          y:{' '}
+          {indexT == null ? '' : Math.round(indexT * dt * velocity * 100) / 100}
+        </Typography>
+      )}
+      {fftMode && (
+        <Typography
+          sx={{ color: '#444', px: 1, width: '7em', textAlign: 'left' }}
+        >
+          f: {indexT != null ? Math.round(freqs[indexT] * 100) / 100 : ''}
+        </Typography>
+      )}
 
       <Typography
         sx={{ color: '#444', px: 1, width: '10em', textAlign: 'left' }}
