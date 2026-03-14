@@ -7,12 +7,14 @@ interface IVisualSettingsStore {
   selectedPalette: string;
   logAmplitudeSelectedSpectrum: boolean;
   selectedPaletteSpectrum: string;
+  selectedPaletteAttributes: string;
 
   setLogAmplitudeSelected: (selected: boolean) => void;
   setLogAmplitudeSelected2: (selected: boolean) => void;
   setSelectedPalette: (palette: string) => void;
   setLogAmplitudeSelectedSpectrum: (selected: boolean) => void;
   setSelectedPaletteSpectrum: (palette: string) => void;
+  setSelectedPaletteAttributes: (palette: string) => void;
 }
 
 const useVisualSettingsStoreBase = create<IVisualSettingsStore>((set) => ({
@@ -21,6 +23,7 @@ const useVisualSettingsStoreBase = create<IVisualSettingsStore>((set) => ({
   selectedPalette: 'greys',
   logAmplitudeSelectedSpectrum: false,
   selectedPaletteSpectrum: 'turbo',
+  selectedPaletteAttributes: 'turbo',
 
   setLogAmplitudeSelected: (selected: boolean) =>
     set(() => ({ logAmplitudeSelected: selected })),
@@ -32,6 +35,8 @@ const useVisualSettingsStoreBase = create<IVisualSettingsStore>((set) => ({
     set(() => ({ logAmplitudeSelectedSpectrum: selected })),
   setSelectedPaletteSpectrum: (palette: string) =>
     set(() => ({ selectedPaletteSpectrum: palette })),
+  setSelectedPaletteAttributes: (palette: string) =>
+    set(() => ({ selectedPaletteAttributes: palette })),
 }));
 
 const useVisualSettingsStore = createSelectors(useVisualSettingsStoreBase);

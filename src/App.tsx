@@ -9,10 +9,14 @@ import BscanFftCanvas from './features/BScanFftCanvas';
 import BscanCanvas from './features/BScanCanvas';
 import StatusBar from './features/StatusBar';
 import useBscanStore from './stores/bscan-store';
+import { AttributesModeType } from './types/attributes-types';
+import PeakFrequencies from './features/attributes/PeakFrequencies';
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
   const fftMode = useUiStore.use.fftMode();
+  const attributesMode = useUiStore.use.attributesMode();
+  const attributesModeType = useUiStore.use.attributesModeType();
 
   const isDataLoaded = useBscanStore.use.bscanFullAmp().length > 0;
 
@@ -55,8 +59,12 @@ function App() {
                 flexDirection: 'row',
               }}
             >
-              {!fftMode && <BscanCanvas></BscanCanvas>}
-              {fftMode && <BscanFftCanvas></BscanFftCanvas>}
+              {!fftMode && !attributesMode && <BscanCanvas></BscanCanvas>}
+              {fftMode && !attributesMode && <BscanFftCanvas></BscanFftCanvas>}
+              {attributesMode &&
+                attributesModeType === AttributesModeType.PeakFrequencies && (
+                  <PeakFrequencies></PeakFrequencies>
+                )}
               {!ascanHidden && <Ascan></Ascan>}
             </Box>
             <StatusBar></StatusBar>

@@ -3,6 +3,7 @@ export const TabType = {
   PROCESSING: 'processing',
   SPECTRUM: 'spectrum',
   VISUAL: 'visual',
+  ATTRIBUTES: 'attributes',
 } as const;
 
 export type TabType = (typeof TabType)[keyof typeof TabType];

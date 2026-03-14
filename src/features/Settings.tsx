@@ -9,12 +9,14 @@ import useUiStore from '../stores/ui-store';
 import { getFftBscan } from '../processing/data-processing/fft-bscan';
 import useBscanStore from '../stores/bscan-store';
 import TabType from '../types/tab-type';
+import AttributesAnalysis from './tabs/AttributesAnalysis';
 
 export default function Settings() {
   const SIZES = 'Размеры';
   const PROCESSING = 'Обработка данных';
   const SPECTRUM = 'Спектр';
   const VISUAL = 'Визуальные настройки';
+  const ATTRIBUTES = 'Атрибуты';
 
   const setFftMode = useUiStore.use.setFftMode();
   const fftMode = useUiStore.use.fftMode();
@@ -66,6 +68,11 @@ export default function Settings() {
     setAnchorEl(null);
   };
 
+  const handleAttributesClose = () => {
+    setActiveTab(TabType.ATTRIBUTES);
+    setAnchorEl(null);
+  };
+
   const getTabName = (tab: TabType): string => {
     switch (tab) {
       case TabType.SIZES:
@@ -76,6 +83,8 @@ export default function Settings() {
         return 'Спектр';
       case TabType.VISUAL:
         return 'Визуальные настройки';
+      case TabType.ATTRIBUTES:
+        return 'Атрибуты';
       default:
         return '';
     }
@@ -135,6 +144,7 @@ export default function Settings() {
         <MenuItem onClick={handleProcessingClose}>{PROCESSING}</MenuItem>
         <MenuItem onClick={handleSpectrumClose}>{SPECTRUM}</MenuItem>
         <MenuItem onClick={handleVisualClose}>{VISUAL}</MenuItem>
+        <MenuItem onClick={handleAttributesClose}>{ATTRIBUTES}</MenuItem>
       </Menu>
       {activeTab === TabType.SIZES && <DataSettings></DataSettings>}
       {activeTab === TabType.PROCESSING && (
@@ -142,6 +152,9 @@ export default function Settings() {
       )}
       {activeTab === TabType.SPECTRUM && <SpectrumSettings></SpectrumSettings>}
       {activeTab === TabType.VISUAL && <VisualSettings></VisualSettings>}
+      {activeTab === TabType.ATTRIBUTES && (
+        <AttributesAnalysis></AttributesAnalysis>
+      )}
     </Box>
   );
 }

@@ -1,27 +1,35 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import useBscanStore from '../stores/bscan-store';
-import useVisualSettingsStore from '../stores/visual-settings-store';
-import { logAmplitude } from '../processing/visual-processing/log-amplitude';
-import getPalette from './get-palette';
 import { Box } from '@mui/material';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import useBscanStore from '../../stores/bscan-store';
+import useAttributesStore from '../../stores/attributes-store';
+import getWindowFrequencies from './get-window-frequencies';
+import getPalette from '../get-palette';
+import useVisualSettingsStore from '../../stores/visual-settings-store';
+import getPeakFrequencies from './get-peak-frequencies';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
 };
 
-export default function BscanCanvas() {
+export default function PeakFrequencies() {
   const DEFAULT_SCALE = 2;
   const bscan = useBscanStore.use.bscan();
-  const bscanToShow = useBscanStore.use.bscanToShow();
-  const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const dt = useBscanStore.use.dt();
-  const velocity = useBscanStore.use.velocity();
   const dx = useBscanStore.use.dx();
-
-  const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setIndexAscan = useBscanStore.use.setIndexAscan();
   const setIndexT = useBscanStore.use.setIndexT();
+
+  const windowSize = useAttributesStore.use.windowSize();
+  const peakFrequencies = useAttributesStore.use.peakFrequencies();
+  const peakFrequenciesToShow = useAttributesStore.use.peakFrequenciesToShow();
+
+  const setPeakFrequencies = useAttributesStore.use.setPeakFrequencies();
+  const setPeakFrequenciesToShow =
+    useAttributesStore.use.setPeakFrequenciesToShow();
+
+  const selectedPaletteAttributes =
+    useVisualSettingsStore.use.selectedPaletteAttributes();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const redrawRef = useRef<() => void>(() => {});
@@ -32,27 +40,20 @@ export default function BscanCanvas() {
   const dragging = useRef<boolean>(false);
   const lastX = useRef<number>(0);
   const lastY = useRef<number>(0);
-
   const [valueRange, setValueRange] = useState<{
     min: number;
     max: number;
   } | null>(null);
 
-  // Build an ImageBitmap once per bscan (fast to draw).
   const bitmapRef = useRef<ImageBitmap | null>(null);
+
   const dims = useMemo(() => {
-    const cols = bscanToShow.length;
-    const rows = cols ? bscanToShow[0].length : 0;
+    const cols = peakFrequenciesToShow.length;
+    const rows = cols ? peakFrequenciesToShow[0].length : 0;
     return { rows, cols };
-  }, [bscanToShow]);
+  }, [peakFrequenciesToShow]);
 
-  const logAmplitudeSelected =
-    useVisualSettingsStore.use.logAmplitudeSelected();
-  const logAmplitudeSelected2 =
-    useVisualSettingsStore.use.logAmplitudeSelected2();
-  const selectedPalette = useVisualSettingsStore.use.selectedPalette();
-
-  const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
+  const ruler = { left: 56, top: 46, right: 0, bottom: 0 };
 
   const vpRef = useRef<{ x: number; y: number; w: number; h: number }>({
     x: 0,
@@ -62,8 +63,8 @@ export default function BscanCanvas() {
   });
 
   const lut = useMemo(() => {
-    return getPalette(selectedPalette);
-  }, [selectedPalette]);
+    return getPalette(selectedPaletteAttributes);
+  }, [selectedPaletteAttributes]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,39 +75,29 @@ export default function BscanCanvas() {
   }, []);
 
   useEffect(() => {
-    lastX.current = 0;
-    lastY.current = 0;
-    setScale(DEFAULT_SCALE);
-    setTx(0);
-    setTy(0);
-    canvasRef.current?.focus();
-  }, [bscanFullAmp]);
+    const windowFrequencies = getWindowFrequencies(bscan, windowSize);
+    const peakFrequencies = getPeakFrequencies(windowFrequencies);
+    setPeakFrequencies(peakFrequencies);
+  }, [bscan, windowSize]);
 
   useEffect(() => {
-    let data = bscan;
-    if (logAmplitudeSelected) {
-      data = logAmplitude(data);
-    }
-    if (logAmplitudeSelected2) {
-      data = logAmplitude(data);
-    }
-    setBscanToShow(data);
-  }, [bscan, logAmplitudeSelected, logAmplitudeSelected2]);
+    setPeakFrequenciesToShow(peakFrequencies);
+  }, [peakFrequencies]);
 
   useEffect(() => {
-    if (!bscanToShow.length) return;
+    if (!peakFrequenciesToShow.length) return;
     const min = Math.min(
-      ...bscanToShow.map((ascan) =>
+      ...peakFrequenciesToShow.map((ascan) =>
         ascan.reduce((min, value) => Math.min(min, value), Infinity),
       ),
     );
     const max = Math.max(
-      ...bscanToShow.map((ascan) =>
+      ...peakFrequenciesToShow.map((ascan) =>
         ascan.reduce((max, value) => Math.max(max, value), -Infinity),
       ),
     );
     setValueRange({ min, max });
-  }, [bscanToShow]);
+  }, [peakFrequenciesToShow]);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,7 +114,7 @@ export default function BscanCanvas() {
       let max = valueRange?.max ?? -Infinity;
       if (!valueRange) {
         for (let y = 0; y < cols; y++) {
-          const col = bscanToShow[y];
+          const col = peakFrequenciesToShow[y];
           for (let x = 0; x < rows; x++) {
             const v = col[x];
             if (v < min) min = v;
@@ -144,7 +135,7 @@ export default function BscanCanvas() {
 
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const v = bscanToShow[x][y];
+          const v = peakFrequenciesToShow[x][y];
           const t = clamp((v - min) * inv, 0, 1);
           const idx = (t * 255) | 0;
           const o = idx * 4;
@@ -179,13 +170,13 @@ export default function BscanCanvas() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bscanToShow, dims.rows, dims.cols, valueRange, lut]);
+  }, [peakFrequenciesToShow, dims.rows, dims.cols, valueRange, lut]);
 
   // Redraw when view changes
   useEffect(() => {
     redraw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scale, tx, ty, dx, dt, velocity]);
+  }, [scale, tx, ty, dx, dt]);
 
   // Mouse interactions: pan + wheel zoom
   useEffect(() => {
@@ -352,7 +343,6 @@ export default function BscanCanvas() {
 
     drawTimeRuler(ctx, wyMin, wyMax);
     drawLengthRuler(ctx, wxMin, wxMax);
-    drawDepthRuler(ctx, wyMin, wyMax);
   };
 
   const drawLengthRuler = (
@@ -472,71 +462,6 @@ export default function BscanCanvas() {
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'end';
       ctx.fillText(String(Math.round(t)), ruler.left - 10, y);
-    }
-  };
-
-  const drawDepthRuler = (
-    ctx: CanvasRenderingContext2D,
-    wyMin: number,
-    wyMax: number,
-  ) => {
-    const rows = bscan[0].length;
-    const vp = vpRef.current;
-    const tVisMin = (wyMin * dt * velocity) / 2;
-    const tVisMax = (wyMax * dt * velocity) / 2;
-
-    const minLabelPx = 34;
-    const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
-    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
-    const step = d3.tickStep(tVisMin, tVisMax, maxTicks);
-    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
-    const fmt = d3.format(`.${decimals}f`);
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(vp.x + vp.w, vp.y, ruler.right, vp.h);
-
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 1;
-
-    const tToWy = d3
-      .scaleLinear()
-      .domain([0, (rows * dt * velocity) / 2])
-      .range([0, rows]);
-
-    ctx.beginPath();
-    ctx.moveTo(vp.w + ruler.left + 3, wyMin * scale + ty + ruler.top);
-    ctx.lineTo(vp.w + ruler.left + 3, wyMax * scale + ty + ruler.top);
-    ctx.stroke();
-
-    ctx.save();
-    const x = vp.w + ruler.left + 50;
-    const y = ((wyMax - wyMin) / 2 + wyMin) * scale - 40 + ty + ruler.top;
-    ctx.translate(x, y);
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#444';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'end';
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Глубина, м', 0, 0);
-    ctx.restore();
-
-    for (const t of ticks) {
-      const wy = tToWy(t);
-      const y = vp.y + (wy * scale + ty);
-      const label = fmt(t);
-
-      if (y < vp.y || y > vp.y + vp.h) continue;
-
-      ctx.beginPath();
-      ctx.moveTo(vp.w + ruler.left + 8, y);
-      ctx.lineTo(vp.w + ruler.left + 3, y);
-      ctx.stroke();
-
-      ctx.font = '12px Arial';
-      ctx.fillStyle = '#444';
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'start';
-      ctx.fillText(label, vp.w + ruler.left + 15, y);
     }
   };
 
