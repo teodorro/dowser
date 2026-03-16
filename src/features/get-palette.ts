@@ -10,7 +10,7 @@ export const getPalette = (palette: string) => {
       return makeLut256(d3.interpolateTurbo);
     case 'spectral':
       return makeLut256(d3.interpolateSpectral);
-    case 'cubehelixDefault':
+    case 'cubehelix':
       return makeLut256(d3.interpolateCubehelixDefault);
     case 'magma':
       return makeLut256(d3.interpolateMagma);

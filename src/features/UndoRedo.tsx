@@ -1,9 +1,9 @@
-import { Redo, Undo } from "@mui/icons-material";
-import { Box, IconButton } from "@mui/material";
-import { useEffect } from "react";
-import { useUndoRedoStore } from "../stores/undo-redo-store";
-import { useShallow } from "zustand/shallow";
-import useBscanStore from "../stores/bscan-store";
+import { Redo, Undo } from '@mui/icons-material';
+import { Box, IconButton } from '@mui/material';
+import { useEffect } from 'react';
+import { useUndoRedoStore } from '../stores/undo-redo-store';
+import { useShallow } from 'zustand/shallow';
+import useBscanStore from '../stores/bscan-store';
 
 export default function UndoRedo() {
   const {
@@ -67,7 +67,7 @@ export default function UndoRedo() {
       sx={{
         padding: 0,
         margin: 2,
-        backgroundColor: "transparent",
+        backgroundColor: 'transparent',
       }}
     >
       <IconButton
@@ -79,9 +79,9 @@ export default function UndoRedo() {
         onClick={handleUndoClick}
         sx={{
           padding: 0,
-          minWidth: "auto",
-          width: "auto",
-          height: "auto",
+          minWidth: 'auto',
+          width: 'auto',
+          height: 'auto',
           lineHeight: 0,
           borderRadius: 3,
           mr: 0.5,
@@ -98,13 +98,13 @@ export default function UndoRedo() {
         onClick={handleRedoClick}
         sx={{
           padding: 0,
-          marginLeft: "0.35em",
-          minWidth: "auto",
-          width: "auto",
-          height: "auto",
+          marginLeft: '0.35em',
+          minWidth: 'auto',
+          width: 'auto',
+          height: 'auto',
           lineHeight: 0,
           borderRadius: 3,
-          mr: 0.5,
+          mr: '-0.5em',
         }}
       >
         <Redo />

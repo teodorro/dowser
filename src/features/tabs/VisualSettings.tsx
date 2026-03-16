@@ -92,7 +92,7 @@ export default function VisualSettings() {
             <MenuItem value="viridis">Viridis</MenuItem>
             <MenuItem value="turbo">Turbo</MenuItem>
             <MenuItem value="spectral">Spectral</MenuItem>
-            <MenuItem value="cubehelixDefault">Cubehelix</MenuItem>
+            <MenuItem value="cubehelix">Cubehelix</MenuItem>
             <MenuItem value="magma">Magma</MenuItem>
             <MenuItem value="rainbow">Rainbow</MenuItem>
           </Select>
@@ -128,7 +128,7 @@ export default function VisualSettings() {
             <MenuItem value="viridis">Viridis</MenuItem>
             <MenuItem value="turbo">Turbo</MenuItem>
             <MenuItem value="spectral">Spectral</MenuItem>
-            <MenuItem value="cubehelixDefault">Cubehelix</MenuItem>
+            <MenuItem value="cubehelix">Cubehelix</MenuItem>
             <MenuItem value="magma">Magma</MenuItem>
             <MenuItem value="rainbow">Rainbow</MenuItem>
           </Select>
