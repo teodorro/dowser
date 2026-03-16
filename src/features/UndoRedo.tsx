@@ -74,7 +74,7 @@ export default function UndoRedo() {
         color="inherit"
         aria-label="menu"
         edge="start"
-        size="large"
+        size="small"
         disabled={isUndoAvailable() === false}
         onClick={handleUndoClick}
         sx={{
@@ -93,18 +93,18 @@ export default function UndoRedo() {
         color="inherit"
         aria-label="menu"
         edge="start"
-        size="medium"
+        size="small"
         disabled={isRedoAvailable() === false}
         onClick={handleRedoClick}
         sx={{
           padding: 0,
-          marginLeft: '0.35em',
           minWidth: 'auto',
           width: 'auto',
           height: 'auto',
           lineHeight: 0,
           borderRadius: 3,
-          mr: '-0.5em',
+          ml: '0.35em',
+          mr: '-0.25em',
         }}
       >
         <Redo />

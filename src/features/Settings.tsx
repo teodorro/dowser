@@ -1,7 +1,6 @@
 import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import React, { useState } from 'react';
 import DataSettings from './tabs/DataSettings';
-import VisualSettings from './tabs/VisualSettings';
 import ProcessingSettings from './tabs/ProcessingSettings';
 import SpectrumSettings from './tabs/SpectrumSettings';
 import { Menu as MenuIcon } from '@mui/icons-material';
@@ -15,7 +14,6 @@ export default function Settings() {
   const SIZES = 'Размеры';
   const PROCESSING = 'Обработка данных';
   const SPECTRUM = 'Спектр';
-  const VISUAL = 'Визуальные настройки';
   const ATTRIBUTES = 'Атрибуты';
 
   const setFftMode = useUiStore.use.setFftMode();
@@ -63,11 +61,6 @@ export default function Settings() {
     }
   };
 
-  const handleVisualClose = () => {
-    setActiveTab(TabType.VISUAL);
-    setAnchorEl(null);
-  };
-
   const handleAttributesClose = () => {
     setActiveTab(TabType.ATTRIBUTES);
     setAnchorEl(null);
@@ -81,8 +74,6 @@ export default function Settings() {
         return 'Обработка данных';
       case TabType.SPECTRUM:
         return 'Спектр';
-      case TabType.VISUAL:
-        return 'Визуальные настройки';
       case TabType.ATTRIBUTES:
         return 'Атрибуты';
       default:
@@ -143,7 +134,6 @@ export default function Settings() {
         <MenuItem onClick={handleSizesClose}>{SIZES}</MenuItem>
         <MenuItem onClick={handleProcessingClose}>{PROCESSING}</MenuItem>
         <MenuItem onClick={handleSpectrumClose}>{SPECTRUM}</MenuItem>
-        <MenuItem onClick={handleVisualClose}>{VISUAL}</MenuItem>
         <MenuItem onClick={handleAttributesClose}>{ATTRIBUTES}</MenuItem>
       </Menu>
       {activeTab === TabType.SIZES && <DataSettings></DataSettings>}
@@ -151,7 +141,6 @@ export default function Settings() {
         <ProcessingSettings></ProcessingSettings>
       )}
       {activeTab === TabType.SPECTRUM && <SpectrumSettings></SpectrumSettings>}
-      {activeTab === TabType.VISUAL && <VisualSettings></VisualSettings>}
       {activeTab === TabType.ATTRIBUTES && (
         <AttributesAnalysis></AttributesAnalysis>
       )}

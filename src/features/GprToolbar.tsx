@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import {
   FolderOpen,
+  Loupe,
   Palette,
   WidthNormal,
   WidthWide,
@@ -70,6 +71,10 @@ export default function GprToolbar() {
     useVisualSettingsStore.use.setSelectedPaletteSpectrum();
   const setSelectedPaletteAttributes =
     useVisualSettingsStore.use.setSelectedPaletteAttributes();
+  const setLogAmplitudeSelected2 =
+    useVisualSettingsStore.use.setLogAmplitudeSelected2();
+  const logAmplitudeSelected2 =
+    useVisualSettingsStore.use.logAmplitudeSelected2();
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
@@ -160,11 +165,11 @@ export default function GprToolbar() {
         >
           <IconButton
             component="label"
-            size="medium"
+            size="small"
             edge="start"
             color="inherit"
-            aria-label="menu"
-            sx={{ m: 0.5 }}
+            aria-label="open file"
+            sx={{ m: '0.1em' }}
           >
             <FolderOpen></FolderOpen>
             <VisuallyHiddenInput
@@ -175,26 +180,28 @@ export default function GprToolbar() {
               }}
             />
           </IconButton>
+
           <UndoRedo></UndoRedo>
+
           <IconButton
             component="label"
-            size="medium"
+            size="small"
             edge="start"
             color="inherit"
-            aria-label="menu"
-            sx={{ m: 0.5 }}
+            aria-label="palette"
+            sx={{ m: '0.1em' }}
             onClick={(event) => handlePaletteButtonClick(event)}
           >
             <Palette></Palette>
           </IconButton>
           <Menu
-            id="lock-menu"
+            id="palette-menu"
             anchorEl={anchorEl}
             open={open}
             onClose={handleMenuPaletteClose}
             slotProps={{
               list: {
-                'aria-labelledby': 'lock-button',
+                'aria-labelledby': 'palette-button',
                 role: 'listbox',
               },
             }}
@@ -209,14 +216,34 @@ export default function GprToolbar() {
               </MenuItem>
             ))}
           </Menu>
+
+          {!fftMode && !attributesMode && (
+            <IconButton
+              component="label"
+              size="small"
+              edge="start"
+              color="inherit"
+              aria-label="logarithm"
+              sx={{
+                m: '0.1em',
+                border: logAmplitudeSelected2
+                  ? '2px solid #fff'
+                  : '2px solid #ffffff00',
+              }}
+              onClick={() => setLogAmplitudeSelected2(!logAmplitudeSelected2)}
+            >
+              <Loupe></Loupe>
+            </IconButton>
+          )}
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {filename}
           </Typography>
+
           <IconButton
             size="medium"
             edge="start"
             color="inherit"
-            aria-label="menu"
+            aria-label="ascan"
             sx={{ mr: 0.5 }}
             onClick={() => setAscanHidden(!ascanHidden)}
           >

@@ -2,7 +2,6 @@ export const TabType = {
   SIZES: 'sizes',
   PROCESSING: 'processing',
   SPECTRUM: 'spectrum',
-  VISUAL: 'visual',
   ATTRIBUTES: 'attributes',
 } as const;
 
