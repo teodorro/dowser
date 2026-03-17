@@ -373,9 +373,12 @@ export default function BscanFftCanvas() {
     const xVisMin = wxMin * dx;
     const xVisMax = wxMax * dx;
 
-    const minLabelPx = 92;
+    const minLabelPx = 131;
     const maxTicks = Math.max(2, Math.floor(vp.w / minLabelPx));
     const ticks = d3.ticks(xVisMin, xVisMax, maxTicks);
+    const step = d3.tickStep(xVisMin, xVisMax, maxTicks);
+    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    const fmx = d3.format(`.${decimals}f`);
 
     ctx.fillStyle = '#fff';
     ctx.fillRect(vp.x, 0, vp.w, ruler.top);
@@ -406,6 +409,7 @@ export default function BscanFftCanvas() {
     for (const t of ticks) {
       const wx = xToWx(t);
       const x = vp.x + (wx * scale + tx);
+      const label = fmx(t);
 
       if (x < vp.x || x > vp.x + vp.w) continue;
 
@@ -418,7 +422,7 @@ export default function BscanFftCanvas() {
       ctx.fillStyle = '#444';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
-      ctx.fillText(String(Math.round(t)), x, ruler.top - 16);
+      ctx.fillText(label, x, ruler.top - 16);
     }
   };
 
@@ -436,6 +440,9 @@ export default function BscanFftCanvas() {
     const minLabelPx = 24;
     const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
     const ticks = d3.ticks(fVisMin, fVisMax, maxTicks);
+    const step = d3.tickStep(fVisMin, fVisMax, maxTicks);
+    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    const fmf = d3.format(`.${decimals}f`);
 
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, vp.y, ruler.left, vp.h);
@@ -468,6 +475,7 @@ export default function BscanFftCanvas() {
     for (const t of ticks) {
       const wy = tToWy(t);
       const y = vp.y + (wy * scale + ty);
+      const label = fmf(t);
 
       if (y < vp.y || y > vp.y + vp.h) continue;
 
@@ -480,7 +488,7 @@ export default function BscanFftCanvas() {
       ctx.fillStyle = '#444';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'end';
-      ctx.fillText(String(Math.round(t)), ruler.left - 10, y);
+      ctx.fillText(label, ruler.left - 10, y);
     }
   };
 

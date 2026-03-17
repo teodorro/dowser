@@ -19,6 +19,8 @@ export default function AttributesScan() {
   const bscan = useBscanStore.use.bscan();
   const dt = useBscanStore.use.dt();
   const dx = useBscanStore.use.dx();
+  const velocity = useBscanStore.use.velocity();
+
   const setIndexAscan = useBscanStore.use.setIndexAscan();
   const setIndexT = useBscanStore.use.setIndexT();
 
@@ -57,7 +59,7 @@ export default function AttributesScan() {
     return { rows, cols };
   }, [scanToShow]);
 
-  const ruler = { left: 56, top: 46, right: 0, bottom: 0 };
+  const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
 
   const vpRef = useRef<{ x: number; y: number; w: number; h: number }>({
     x: 0,
@@ -385,6 +387,7 @@ export default function AttributesScan() {
 
     drawTimeRuler(ctx, wyMin, wyMax);
     drawLengthRuler(ctx, wxMin, wxMax);
+    drawDepthRuler(ctx, wyMin, wyMax);
   };
 
   const drawLengthRuler = (
@@ -397,9 +400,12 @@ export default function AttributesScan() {
     const xVisMin = wxMin * dx;
     const xVisMax = wxMax * dx;
 
-    const minLabelPx = 92;
+    const minLabelPx = 131;
     const maxTicks = Math.max(2, Math.floor(vp.w / minLabelPx));
     const ticks = d3.ticks(xVisMin, xVisMax, maxTicks);
+    const step = d3.tickStep(xVisMin, xVisMax, maxTicks);
+    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    const fmx = d3.format(`.${decimals}f`);
 
     ctx.fillStyle = '#fff';
     ctx.fillRect(vp.x, 0, vp.w, ruler.top);
@@ -430,6 +436,7 @@ export default function AttributesScan() {
     for (const t of ticks) {
       const wx = xToWx(t);
       const x = vp.x + (wx * scale + tx);
+      const label = fmx(t);
 
       if (x < vp.x || x > vp.x + vp.w) continue;
 
@@ -442,7 +449,7 @@ export default function AttributesScan() {
       ctx.fillStyle = '#444';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
-      ctx.fillText(String(Math.round(t)), x, ruler.top - 16);
+      ctx.fillText(label, x, ruler.top - 16);
     }
   };
 
@@ -459,6 +466,9 @@ export default function AttributesScan() {
     const minLabelPx = 24;
     const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
     const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
+    const step = d3.tickStep(tVisMin, tVisMax, maxTicks);
+    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    const fmt = d3.format(`.${decimals}f`);
 
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, vp.y, ruler.left, vp.h);
@@ -491,6 +501,7 @@ export default function AttributesScan() {
     for (const t of ticks) {
       const wy = tToWy(t);
       const y = vp.y + (wy * scale + ty);
+      const label = fmt(t);
 
       if (y < vp.y || y > vp.y + vp.h) continue;
 
@@ -503,7 +514,72 @@ export default function AttributesScan() {
       ctx.fillStyle = '#444';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'end';
-      ctx.fillText(String(Math.round(t)), ruler.left - 10, y);
+      ctx.fillText(label, ruler.left - 10, y);
+    }
+  };
+
+  const drawDepthRuler = (
+    ctx: CanvasRenderingContext2D,
+    wyMin: number,
+    wyMax: number,
+  ) => {
+    const rows = bscan[0].length;
+    const vp = vpRef.current;
+    const tVisMin = (wyMin * dt * velocity) / 2;
+    const tVisMax = (wyMax * dt * velocity) / 2;
+
+    const minLabelPx = 34;
+    const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
+    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
+    const step = d3.tickStep(tVisMin, tVisMax, maxTicks);
+    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    const fmt = d3.format(`.${decimals}f`);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(vp.x + vp.w, vp.y, ruler.right, vp.h);
+
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1;
+
+    const tToWy = d3
+      .scaleLinear()
+      .domain([0, (rows * dt * velocity) / 2])
+      .range([0, rows]);
+
+    ctx.beginPath();
+    ctx.moveTo(vp.w + ruler.left + 3, wyMin * scale + ty + ruler.top);
+    ctx.lineTo(vp.w + ruler.left + 3, wyMax * scale + ty + ruler.top);
+    ctx.stroke();
+
+    ctx.save();
+    const x = vp.w + ruler.left + 50;
+    const y = ((wyMax - wyMin) / 2 + wyMin) * scale - 40 + ty + ruler.top;
+    ctx.translate(x, y);
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#444';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'end';
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Глубина, м', 0, 0);
+    ctx.restore();
+
+    for (const t of ticks) {
+      const wy = tToWy(t);
+      const y = vp.y + (wy * scale + ty);
+      const label = fmt(t);
+
+      if (y < vp.y || y > vp.y + vp.h) continue;
+
+      ctx.beginPath();
+      ctx.moveTo(vp.w + ruler.left + 8, y);
+      ctx.lineTo(vp.w + ruler.left + 3, y);
+      ctx.stroke();
+
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#444';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'start';
+      ctx.fillText(label, vp.w + ruler.left + 15, y);
     }
   };
 
