@@ -1,56 +1,49 @@
 import { create } from 'zustand';
 import { createSelectors } from '../utils/create-selectors';
-import type { FrequenciesWindow } from '../types/attributes-types';
+import {
+  AttributesModeType,
+  type FrequenciesWindow,
+} from '../types/attributes-types';
 
 interface IAttributesStore {
   windowSize: number;
+  selectedAttribute: AttributesModeType;
   frequencies: FrequenciesWindow[][];
   peakFrequencies: number[][];
-  peakFrequenciesToShow: number[][];
   spectrumWidths: number[][];
-  spectrumWidthsToShow: number[][];
   qualityFactors: number[][];
-  qualityFactorsToShow: number[][];
   coherence: number[][];
-  coherenceToShow: number[][];
+  scanToShow: number[][];
 
   setWindowSize: (size: number) => void;
+  setSelectedAttribute: (attribute: AttributesModeType) => void;
   setFrequencies: (frequencies: FrequenciesWindow[][]) => void;
   setPeakFrequencies: (peakFrequencies: number[][]) => void;
-  setPeakFrequenciesToShow: (peakFrequenciesToShow: number[][]) => void;
   setSpectrumWidths: (spectrumWidths: number[][]) => void;
-  setSpectrumWidthsToShow: (spectrumWidthsToShow: number[][]) => void;
   setQualityFactors: (qualityFactors: number[][]) => void;
-  setQualityFactorsToShow: (qualityFactorsToShow: number[][]) => void;
   setCoherence: (coherence: number[][]) => void;
-  setCoherenceToShow: (coherenceToShow: number[][]) => void;
+  setScanToShow: (scanToShow: number[][]) => void;
 }
 
 const useAttributesStoreBase = create<IAttributesStore>((set) => ({
   windowSize: 16,
+  selectedAttribute: AttributesModeType.PeakFrequencies,
   frequencies: [],
   peakFrequencies: [],
-  peakFrequenciesToShow: [],
   spectrumWidths: [],
-  spectrumWidthsToShow: [],
   qualityFactors: [],
-  qualityFactorsToShow: [],
   coherence: [],
-  coherenceToShow: [],
+  scanToShow: [],
 
   setWindowSize: (size: number) => set({ windowSize: size }),
+  setSelectedAttribute: (attribute: AttributesModeType) =>
+    set({ selectedAttribute: attribute }),
   setFrequencies: (frequencies: FrequenciesWindow[][]) => set({ frequencies }),
   setPeakFrequencies: (peakFrequencies: number[][]) => set({ peakFrequencies }),
-  setPeakFrequenciesToShow: (peakFrequenciesToShow: number[][]) =>
-    set({ peakFrequenciesToShow }),
   setSpectrumWidths: (spectrumWidths: number[][]) => set({ spectrumWidths }),
-  setSpectrumWidthsToShow: (spectrumWidthsToShow: number[][]) =>
-    set({ spectrumWidthsToShow }),
   setQualityFactors: (qualityFactors: number[][]) => set({ qualityFactors }),
-  setQualityFactorsToShow: (qualityFactorsToShow: number[][]) =>
-    set({ qualityFactorsToShow }),
   setCoherence: (coherence: number[][]) => set({ coherence }),
-  setCoherenceToShow: (coherenceToShow: number[][]) => set({ coherenceToShow }),
+  setScanToShow: (scanToShow: number[][]) => set({ scanToShow }),
 }));
 
 const useAttributesStore = createSelectors(useAttributesStoreBase);

@@ -7,12 +7,14 @@ import getWindowFrequencies from './get-window-frequencies';
 import getPalette from '../get-palette';
 import useVisualSettingsStore from '../../stores/visual-settings-store';
 import getPeakFrequencies from './get-peak-frequencies';
+import unreachable from '../../utils/unreachable';
+import getSpectrumWidths from './get-spectrum-widths';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
 };
 
-export default function PeakFrequencies() {
+export default function AttributesScan() {
   const DEFAULT_SCALE = 2;
   const bscan = useBscanStore.use.bscan();
   const dt = useBscanStore.use.dt();
@@ -21,12 +23,14 @@ export default function PeakFrequencies() {
   const setIndexT = useBscanStore.use.setIndexT();
 
   const windowSize = useAttributesStore.use.windowSize();
+  const selectedAttribute = useAttributesStore.use.selectedAttribute();
   const peakFrequencies = useAttributesStore.use.peakFrequencies();
-  const peakFrequenciesToShow = useAttributesStore.use.peakFrequenciesToShow();
+  const spectrumWidths = useAttributesStore.use.spectrumWidths();
+  const scanToShow = useAttributesStore.use.scanToShow();
 
   const setPeakFrequencies = useAttributesStore.use.setPeakFrequencies();
-  const setPeakFrequenciesToShow =
-    useAttributesStore.use.setPeakFrequenciesToShow();
+  const setSpectrumWidths = useAttributesStore.use.setSpectrumWidths();
+  const setScanToShow = useAttributesStore.use.setScanToShow();
 
   const selectedPaletteAttributes =
     useVisualSettingsStore.use.selectedPaletteAttributes();
@@ -48,10 +52,10 @@ export default function PeakFrequencies() {
   const bitmapRef = useRef<ImageBitmap | null>(null);
 
   const dims = useMemo(() => {
-    const cols = peakFrequenciesToShow.length;
-    const rows = cols ? peakFrequenciesToShow[0].length : 0;
+    const cols = scanToShow.length;
+    const rows = cols ? scanToShow[0].length : 0;
     return { rows, cols };
-  }, [peakFrequenciesToShow]);
+  }, [scanToShow]);
 
   const ruler = { left: 56, top: 46, right: 0, bottom: 0 };
 
@@ -69,35 +73,68 @@ export default function PeakFrequencies() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ro = new ResizeObserver(() => redrawRef.current());
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(() => redrawRef.current());
+    });
     ro.observe(canvas);
     return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
     const windowFrequencies = getWindowFrequencies(bscan, windowSize);
-    const peakFrequencies = getPeakFrequencies(windowFrequencies);
-    setPeakFrequencies(peakFrequencies);
-  }, [bscan, windowSize]);
+    switch (selectedAttribute) {
+      case 'peakFrequencies':
+        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt));
+        break;
+      case 'spectrumWidths':
+        setSpectrumWidths(getSpectrumWidths(windowFrequencies, dt));
+        break;
+      case 'qualityFactors':
+        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement quality factors
+        break;
+      case 'coherence':
+        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement coherence
+        break;
+      default:
+        unreachable(selectedAttribute);
+        break;
+    }
+  }, [bscan, windowSize, dt]);
 
   useEffect(() => {
-    setPeakFrequenciesToShow(peakFrequencies);
-  }, [peakFrequencies]);
+    switch (selectedAttribute) {
+      case 'peakFrequencies':
+        setScanToShow(peakFrequencies);
+        break;
+      case 'spectrumWidths':
+        setScanToShow(spectrumWidths);
+        break;
+      case 'qualityFactors': // TODO: implement quality factors
+        setScanToShow(peakFrequencies);
+        break;
+      case 'coherence': // TODO: implement coherence
+        setScanToShow(peakFrequencies);
+        break;
+      default:
+        unreachable(selectedAttribute);
+        break;
+    }
+  }, [selectedAttribute, peakFrequencies, spectrumWidths]);
 
   useEffect(() => {
-    if (!peakFrequenciesToShow.length) return;
+    if (!scanToShow.length) return;
     const min = Math.min(
-      ...peakFrequenciesToShow.map((ascan) =>
+      ...scanToShow.map((ascan) =>
         ascan.reduce((min, value) => Math.min(min, value), Infinity),
       ),
     );
     const max = Math.max(
-      ...peakFrequenciesToShow.map((ascan) =>
+      ...scanToShow.map((ascan) =>
         ascan.reduce((max, value) => Math.max(max, value), -Infinity),
       ),
     );
     setValueRange({ min, max });
-  }, [peakFrequenciesToShow]);
+  }, [scanToShow]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +151,7 @@ export default function PeakFrequencies() {
       let max = valueRange?.max ?? -Infinity;
       if (!valueRange) {
         for (let y = 0; y < cols; y++) {
-          const col = peakFrequenciesToShow[y];
+          const col = scanToShow[y];
           for (let x = 0; x < rows; x++) {
             const v = col[x];
             if (v < min) min = v;
@@ -135,7 +172,7 @@ export default function PeakFrequencies() {
 
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const v = peakFrequenciesToShow[x][y];
+          const v = scanToShow[x][y];
           const t = clamp((v - min) * inv, 0, 1);
           const idx = (t * 255) | 0;
           const o = idx * 4;
@@ -162,7 +199,7 @@ export default function PeakFrequencies() {
       bitmapRef.current?.close?.();
       bitmapRef.current = bmp;
 
-      redraw();
+      requestAnimationFrame(() => redraw());
     }
 
     buildBitmap();
@@ -170,7 +207,7 @@ export default function PeakFrequencies() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [peakFrequenciesToShow, dims.rows, dims.cols, valueRange, lut]);
+  }, [scanToShow, dims.rows, dims.cols, valueRange, lut]);
 
   // Redraw when view changes
   useEffect(() => {
@@ -261,6 +298,11 @@ export default function PeakFrequencies() {
     const dpr = window.devicePixelRatio || 1;
     const cssW = canvas.clientWidth;
     const cssH = canvas.clientHeight;
+
+    if (cssW <= 0 || cssH <= 0) {
+      requestAnimationFrame(() => redrawRef.current());
+      return;
+    }
 
     const w = Math.floor(cssW * dpr);
     const h = Math.floor(cssH * dpr);

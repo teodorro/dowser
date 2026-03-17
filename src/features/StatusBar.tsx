@@ -3,12 +3,20 @@ import useBscanStore from '../stores/bscan-store';
 import { fftFreqAxisHalf } from '../processing/data-processing/fft-bscan';
 import { useEffect, useState } from 'react';
 import useUiStore from '../stores/ui-store';
+import useAttributesStore from '../stores/attributes-store';
+import { AttributesModeType } from '../types/attributes-types';
 
 export default function StatusBar() {
   const indexAscan = useBscanStore.use.indexAscan();
   const indexT = useBscanStore.use.indexT();
   const bscan = useBscanStore.use.bscan();
   const bscanFft = useBscanStore.use.bscanFft();
+  const selectedAttribute = useAttributesStore.use.selectedAttribute();
+  const peakFrequencies = useAttributesStore.use.peakFrequencies();
+  const spectrumWidths = useAttributesStore.use.spectrumWidths();
+  // const qualityFactors = useAttributesStore.use.qualityFactors();
+  // const coherence = useAttributesStore.use.coherence();
+  const attributesMode = useUiStore.use.attributesMode();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
   const velocity = useBscanStore.use.velocity();
@@ -28,6 +36,23 @@ export default function StatusBar() {
       indexAscan == null || indexT == null
         ? ''
         : Math.round(bscan[indexAscan][indexT] * 100) / 100;
+    return a;
+  };
+
+  const getVal = () => {
+    let profile: number[][] = [];
+    switch (selectedAttribute) {
+      case AttributesModeType.PeakFrequencies:
+        profile = peakFrequencies;
+        break;
+      case AttributesModeType.SpectrumWidths:
+        profile = spectrumWidths;
+        break;
+    }
+    const a =
+      indexAscan == null || indexT == null
+        ? ''
+        : Math.round(profile[indexAscan][indexT] * 100) / 100;
     return a;
   };
 
@@ -72,11 +97,21 @@ export default function StatusBar() {
         </Typography>
       )}
 
-      <Typography
-        sx={{ color: '#444', px: 1, width: '10em', textAlign: 'left' }}
-      >
-        amp: {getAmp()}
-      </Typography>
+      {!attributesMode && (
+        <Typography
+          sx={{ color: '#444', px: 1, width: '10em', textAlign: 'left' }}
+        >
+          amp: {getAmp()}
+        </Typography>
+      )}
+
+      {attributesMode && (
+        <Typography
+          sx={{ color: '#444', px: 1, width: '10em', textAlign: 'left' }}
+        >
+          val: {getVal()}
+        </Typography>
+      )}
     </Box>
   );
 }

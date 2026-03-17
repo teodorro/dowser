@@ -1,18 +1,36 @@
-import { Box, TextField } from '@mui/material';
+import {
+  Box,
+  InputLabel,
+  Select,
+  FormControl,
+  MenuItem,
+  TextField,
+  type SelectChangeEvent,
+} from '@mui/material';
 import { useEffect } from 'react';
 import useBscanStore from '../../stores/bscan-store';
 import useUiStore from '../../stores/ui-store';
 import { AttributesModeType } from '../../types/attributes-types';
 import useAttributesStore from '../../stores/attributes-store';
+import getPeakFrequencies from '../attributes/get-peak-frequencies';
+import getWindowFrequencies from '../attributes/get-window-frequencies';
+import getSpectrumWidths from '../attributes/get-spectrum-widths';
+import unreachable from '../../utils/unreachable';
 
 export default function AttributesAnalysis() {
   const bscan = useBscanStore.use.bscan();
+  const dt = useBscanStore.use.dt();
+
+  const windowSize = useAttributesStore.use.windowSize();
+  const selectedAttribute = useAttributesStore.use.selectedAttribute();
+
+  const setPeakFrequencies = useAttributesStore.use.setPeakFrequencies();
+  const setSpectrumWidths = useAttributesStore.use.setSpectrumWidths();
+  const setWindowSize = useAttributesStore.use.setWindowSize();
+  const setSelectedAttribute = useAttributesStore.use.setSelectedAttribute();
 
   const setAttributesModeType = useUiStore.use.setAttributesModeType();
   const setAttributesMode = useUiStore.use.setAttributesMode();
-
-  const windowSize = useAttributesStore.use.windowSize();
-  const setWindowSize = useAttributesStore.use.setWindowSize();
 
   useEffect(() => {
     setAttributesMode(true);
@@ -45,6 +63,30 @@ export default function AttributesAnalysis() {
     return '';
   };
 
+  const handleChangeAttribute = (event: SelectChangeEvent<string>) => {
+    const attribute = event.target.value as AttributesModeType;
+    const windowFrequencies = getWindowFrequencies(bscan, windowSize);
+
+    switch (attribute) {
+      case 'peakFrequencies':
+        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt));
+        break;
+      case 'spectrumWidths':
+        setSpectrumWidths(getSpectrumWidths(windowFrequencies, dt));
+        break;
+      case 'qualityFactors':
+        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement quality factors
+        break;
+      case 'coherence':
+        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement coherence
+        break;
+      default:
+        unreachable(attribute);
+        break;
+    }
+    setSelectedAttribute(attribute);
+  };
+
   return (
     <Box
       sx={{
@@ -65,6 +107,25 @@ export default function AttributesAnalysis() {
           helperText={getLowStopFreqHelperText(windowSize)}
           sx={{ display: 'flex', margin: '0.5em' }}
         />
+        <FormControl
+          fullWidth
+          sx={{ padding: '0.5em', mt: '1em', size: 'small' }}
+        >
+          <InputLabel id="select-attribute-label">Атрибут</InputLabel>
+          <Select
+            labelId="select-attribute-label"
+            id="select-attribute"
+            value={selectedAttribute}
+            label="Атрибут"
+            onChange={handleChangeAttribute}
+            size="small"
+          >
+            <MenuItem value="peakFrequencies">Пиковая частота</MenuItem>
+            <MenuItem value="spectrumWidths">Спектральная ширина</MenuItem>
+            <MenuItem value="qualityFactors">Добротность</MenuItem>
+            <MenuItem value="coherence">Когерентность</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
     </Box>
   );

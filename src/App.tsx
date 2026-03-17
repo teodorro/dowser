@@ -10,7 +10,7 @@ import BscanCanvas from './features/BScanCanvas';
 import StatusBar from './features/StatusBar';
 import useBscanStore from './stores/bscan-store';
 import { AttributesModeType } from './types/attributes-types';
-import PeakFrequencies from './features/attributes/PeakFrequencies';
+import AttributesScan from './features/attributes/AttributesScan';
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
@@ -63,7 +63,7 @@ function App() {
               {fftMode && !attributesMode && <BscanFftCanvas></BscanFftCanvas>}
               {attributesMode &&
                 attributesModeType === AttributesModeType.PeakFrequencies && (
-                  <PeakFrequencies></PeakFrequencies>
+                  <AttributesScan></AttributesScan>
                 )}
               {!ascanHidden && <Ascan></Ascan>}
             </Box>
