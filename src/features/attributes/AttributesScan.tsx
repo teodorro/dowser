@@ -3,12 +3,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import useBscanStore from '../../stores/bscan-store';
 import useAttributesStore from '../../stores/attributes-store';
-import getWindowFrequencies from './get-window-frequencies';
 import getPalette from '../get-palette';
 import useVisualSettingsStore from '../../stores/visual-settings-store';
-import getPeakFrequencies from './get-peak-frequencies';
 import unreachable from '../../utils/unreachable';
-import getSpectrumWidths from './get-spectrum-widths';
+import useUiStore from '../../stores/ui-store';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -23,6 +21,8 @@ export default function AttributesScan() {
 
   const setIndexAscan = useBscanStore.use.setIndexAscan();
   const setIndexT = useBscanStore.use.setIndexT();
+
+  const setIsLoading = useUiStore.use.setIsLoading();
 
   const windowSize = useAttributesStore.use.windowSize();
   const selectedAttribute = useAttributesStore.use.selectedAttribute();
@@ -68,6 +68,8 @@ export default function AttributesScan() {
     h: 0,
   });
 
+  const workerRef = useRef<Worker | null>(null);
+
   const lut = useMemo(() => {
     return getPalette(selectedPaletteAttributes);
   }, [selectedPaletteAttributes]);
@@ -83,24 +85,36 @@ export default function AttributesScan() {
   }, []);
 
   useEffect(() => {
-    const windowFrequencies = getWindowFrequencies(bscan, windowSize);
-    switch (selectedAttribute) {
-      case 'peakFrequencies':
-        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt));
-        break;
-      case 'spectrumWidths':
-        setSpectrumWidths(getSpectrumWidths(windowFrequencies, dt));
-        break;
-      case 'qualityFactors':
-        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement quality factors
-        break;
-      case 'coherence':
-        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement coherence
-        break;
-      default:
-        unreachable(selectedAttribute);
-        break;
-    }
+    const worker = new Worker(
+      new URL('../attributes/attributes-worker.ts', import.meta.url),
+      { type: 'module' },
+    );
+
+    worker.onmessage = (
+      e: MessageEvent<{
+        type: 'peakFrequencies' | 'spectrumWidths';
+        result: number[][];
+      }>,
+    ) => {
+      if (e.data.type === 'peakFrequencies') {
+        setPeakFrequencies(e.data.result);
+      } else {
+        setSpectrumWidths(e.data.result);
+      }
+
+      setIsLoading(false);
+    };
+
+    workerRef.current = worker;
+
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    runAnalysis();
   }, [bscan, windowSize, dt]);
 
   useEffect(() => {
@@ -581,6 +595,19 @@ export default function AttributesScan() {
       ctx.textAlign = 'start';
       ctx.fillText(label, vp.w + ruler.left + 15, y);
     }
+  };
+
+  const runAnalysis = () => {
+    if (!bscan.length) return;
+
+    setIsLoading(true);
+
+    workerRef.current?.postMessage({
+      type: selectedAttribute,
+      bscan,
+      dt,
+      windowSize,
+    });
   };
 
   return (

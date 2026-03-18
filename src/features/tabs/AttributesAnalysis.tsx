@@ -7,15 +7,11 @@ import {
   TextField,
   type SelectChangeEvent,
 } from '@mui/material';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import useBscanStore from '../../stores/bscan-store';
 import useUiStore from '../../stores/ui-store';
 import { AttributesModeType } from '../../types/attributes-types';
 import useAttributesStore from '../../stores/attributes-store';
-import getPeakFrequencies from '../attributes/get-peak-frequencies';
-import getWindowFrequencies from '../attributes/get-window-frequencies';
-import getSpectrumWidths from '../attributes/get-spectrum-widths';
-import unreachable from '../../utils/unreachable';
 
 export default function AttributesAnalysis() {
   const bscan = useBscanStore.use.bscan();
@@ -31,12 +27,40 @@ export default function AttributesAnalysis() {
 
   const setAttributesModeType = useUiStore.use.setAttributesModeType();
   const setAttributesMode = useUiStore.use.setAttributesMode();
+  const setIsLoading = useUiStore.use.setIsLoading();
+
+  const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
     setAttributesMode(true);
     setAttributesModeType(AttributesModeType.PeakFrequencies);
+
+    const worker = new Worker(
+      new URL('../attributes/attributes-worker.ts', import.meta.url),
+      { type: 'module' },
+    );
+
+    worker.onmessage = (
+      e: MessageEvent<{
+        type: 'peakFrequencies' | 'spectrumWidths';
+        result: number[][];
+      }>,
+    ) => {
+      if (e.data.type === 'peakFrequencies') {
+        setPeakFrequencies(e.data.result);
+      } else {
+        setSpectrumWidths(e.data.result);
+      }
+
+      setIsLoading(false);
+    };
+
+    workerRef.current = worker;
+
     return () => {
       setAttributesMode(false);
+      worker.terminate();
+      workerRef.current = null;
     };
   }, []);
 
@@ -63,28 +87,23 @@ export default function AttributesAnalysis() {
     return '';
   };
 
+  const runAnalysis = (attribute: AttributesModeType) => {
+    setSelectedAttribute(attribute);
+    if (!bscan.length) return;
+
+    setIsLoading(true);
+
+    workerRef.current?.postMessage({
+      type: attribute,
+      bscan,
+      dt,
+      windowSize,
+    });
+  };
+
   const handleChangeAttribute = (event: SelectChangeEvent<string>) => {
     const attribute = event.target.value as AttributesModeType;
-    const windowFrequencies = getWindowFrequencies(bscan, windowSize);
-
-    switch (attribute) {
-      case 'peakFrequencies':
-        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt));
-        break;
-      case 'spectrumWidths':
-        setSpectrumWidths(getSpectrumWidths(windowFrequencies, dt));
-        break;
-      case 'qualityFactors':
-        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement quality factors
-        break;
-      case 'coherence':
-        setPeakFrequencies(getPeakFrequencies(windowFrequencies, dt)); //TODO: implement coherence
-        break;
-      default:
-        unreachable(attribute);
-        break;
-    }
-    setSelectedAttribute(attribute);
+    runAnalysis(attribute);
   };
 
   return (

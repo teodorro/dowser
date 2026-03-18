@@ -1,6 +1,6 @@
 import './App.css';
 import GprToolbar from './features/GprToolbar';
-import { Box } from '@mui/material';
+import { Backdrop, Box, CircularProgress } from '@mui/material';
 import Ascan from './features/Ascan';
 import Settings from './features/Settings';
 import useUiStore from './stores/ui-store';
@@ -17,6 +17,7 @@ function App() {
   const fftMode = useUiStore.use.fftMode();
   const attributesMode = useUiStore.use.attributesMode();
   const attributesModeType = useUiStore.use.attributesModeType();
+  const isLoading = useUiStore.use.isLoading();
 
   const isDataLoaded = useBscanStore.use.bscanFullAmp().length > 0;
 
@@ -83,6 +84,12 @@ function App() {
       >
         <ErrorNotification></ErrorNotification>
       </Box>
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+        open={isLoading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 }

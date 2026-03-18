@@ -10,6 +10,7 @@ interface IUiStore {
   attributesMode: boolean;
   attributesModeType: AttributesModeType;
   activeTab: TabType;
+  isLoading: boolean;
 
   setFilename: (filename: string) => void;
   setAscanHidden: (hidden: boolean) => void;
@@ -17,6 +18,7 @@ interface IUiStore {
   setAttributesMode: (mode: boolean) => void;
   setAttributesModeType: (type: AttributesModeType) => void;
   setActiveTab: (tab: TabType) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const useUiStoreBase = create<IUiStore>((set) => ({
@@ -26,6 +28,7 @@ const useUiStoreBase = create<IUiStore>((set) => ({
   attributesMode: false,
   attributesModeType: AttributesModeType.PeakFrequencies,
   activeTab: TabType.SIZES,
+  isLoading: false,
 
   setFilename: (filename: string) => set(() => ({ filename })),
   setAscanHidden: (hidden: boolean) => set(() => ({ ascanHidden: hidden })),
@@ -34,6 +37,7 @@ const useUiStoreBase = create<IUiStore>((set) => ({
   setAttributesModeType: (type: AttributesModeType) =>
     set(() => ({ attributesModeType: type })),
   setActiveTab: (tab: TabType) => set(() => ({ activeTab: tab as TabType })),
+  setIsLoading: (loading: boolean) => set(() => ({ isLoading: loading })),
 }));
 
 const useUiStore = createSelectors(useUiStoreBase);
