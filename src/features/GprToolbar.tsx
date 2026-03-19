@@ -91,7 +91,6 @@ export default function GprToolbar() {
     clearUndoRedo();
     setBscan(bscanFullAmp);
     setFftMode(false);
-    setActiveTab(TabType.SIZES);
   }, [bscanFullAmp]);
 
   useEffect(() => {
@@ -122,6 +121,7 @@ export default function GprToolbar() {
     const file = files[0];
     if (!file) return;
     try {
+      setActiveTab(TabType.SIZES);
       loadDataFile(file);
     } catch (err) {
       showError(`Ошибка при загрузке файла: ${(err as Error).message}`);
