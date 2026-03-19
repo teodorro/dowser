@@ -14,8 +14,8 @@ export default function StatusBar() {
   const selectedAttribute = useAttributesStore.use.selectedAttribute();
   const peakFrequencies = useAttributesStore.use.peakFrequencies();
   const spectrumWidths = useAttributesStore.use.spectrumWidths();
-  // const qualityFactors = useAttributesStore.use.qualityFactors();
-  // const coherence = useAttributesStore.use.coherence();
+  const qualityFactors = useAttributesStore.use.qualityFactors();
+  const coherence = useAttributesStore.use.coherence();
   const attributesMode = useUiStore.use.attributesMode();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
@@ -47,6 +47,12 @@ export default function StatusBar() {
         break;
       case AttributesModeType.SpectrumWidths:
         profile = spectrumWidths;
+        break;
+      case AttributesModeType.QualityFactors:
+        profile = qualityFactors;
+        break;
+      case AttributesModeType.Coherence:
+        profile = coherence;
         break;
     }
     const a =

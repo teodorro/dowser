@@ -28,10 +28,14 @@ export default function AttributesScan() {
   const selectedAttribute = useAttributesStore.use.selectedAttribute();
   const peakFrequencies = useAttributesStore.use.peakFrequencies();
   const spectrumWidths = useAttributesStore.use.spectrumWidths();
+  const qualityFactors = useAttributesStore.use.qualityFactors();
+  const coherence = useAttributesStore.use.coherence();
   const scanToShow = useAttributesStore.use.scanToShow();
 
   const setPeakFrequencies = useAttributesStore.use.setPeakFrequencies();
   const setSpectrumWidths = useAttributesStore.use.setSpectrumWidths();
+  const setQualityFactors = useAttributesStore.use.setQualityFactors();
+  const setCoherence = useAttributesStore.use.setCoherence();
   const setScanToShow = useAttributesStore.use.setScanToShow();
 
   const selectedPaletteAttributes =
@@ -92,14 +96,22 @@ export default function AttributesScan() {
 
     worker.onmessage = (
       e: MessageEvent<{
-        type: 'peakFrequencies' | 'spectrumWidths';
+        type:
+          | 'peakFrequencies'
+          | 'spectrumWidths'
+          | 'qualityFactors'
+          | 'coherence';
         result: number[][];
       }>,
     ) => {
       if (e.data.type === 'peakFrequencies') {
         setPeakFrequencies(e.data.result);
-      } else {
+      } else if (e.data.type === 'spectrumWidths') {
         setSpectrumWidths(e.data.result);
+      } else if (e.data.type === 'qualityFactors') {
+        setQualityFactors(e.data.result);
+      } else if (e.data.type === 'coherence') {
+        setCoherence(e.data.result);
       }
 
       setIsLoading(false);
@@ -125,17 +137,23 @@ export default function AttributesScan() {
       case 'spectrumWidths':
         setScanToShow(spectrumWidths);
         break;
-      case 'qualityFactors': // TODO: implement quality factors
-        setScanToShow(peakFrequencies);
+      case 'qualityFactors':
+        setScanToShow(qualityFactors);
         break;
-      case 'coherence': // TODO: implement coherence
-        setScanToShow(peakFrequencies);
+      case 'coherence':
+        setScanToShow(coherence);
         break;
       default:
         unreachable(selectedAttribute);
         break;
     }
-  }, [selectedAttribute, peakFrequencies, spectrumWidths]);
+  }, [
+    selectedAttribute,
+    peakFrequencies,
+    spectrumWidths,
+    qualityFactors,
+    coherence,
+  ]);
 
   useEffect(() => {
     if (!scanToShow.length) return;

@@ -22,6 +22,8 @@ export default function AttributesAnalysis() {
 
   const setPeakFrequencies = useAttributesStore.use.setPeakFrequencies();
   const setSpectrumWidths = useAttributesStore.use.setSpectrumWidths();
+  const setQualityFactors = useAttributesStore.use.setQualityFactors();
+  const setCoherence = useAttributesStore.use.setCoherence();
   const setWindowSize = useAttributesStore.use.setWindowSize();
   const setSelectedAttribute = useAttributesStore.use.setSelectedAttribute();
 
@@ -42,14 +44,22 @@ export default function AttributesAnalysis() {
 
     worker.onmessage = (
       e: MessageEvent<{
-        type: 'peakFrequencies' | 'spectrumWidths';
+        type:
+          | 'peakFrequencies'
+          | 'spectrumWidths'
+          | 'qualityFactors'
+          | 'coherence';
         result: number[][];
       }>,
     ) => {
       if (e.data.type === 'peakFrequencies') {
         setPeakFrequencies(e.data.result);
-      } else {
+      } else if (e.data.type === 'spectrumWidths') {
         setSpectrumWidths(e.data.result);
+      } else if (e.data.type === 'qualityFactors') {
+        setQualityFactors(e.data.result);
+      } else if (e.data.type === 'coherence') {
+        setCoherence(e.data.result);
       }
 
       setIsLoading(false);
