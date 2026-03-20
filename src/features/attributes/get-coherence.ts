@@ -15,7 +15,7 @@ export const getCoherence = (
       let sumNext = 0;
       let sumPrev = 0;
       for (let k = 0; k < windowLength; k++) {
-        let ind = j + k - windowLength / 2;
+        let ind = j + k - Math.floor(windowLength / 2);
         if (ind >= ascan.length) {
           ind = ascan.length - 1;
         } else if (ind < 0) {
@@ -30,7 +30,7 @@ export const getCoherence = (
         upperPart += value * valueNext + value * valuePrev;
       }
       lowerPart = Math.sqrt(sum * sumNext) + Math.sqrt(sum * sumPrev);
-      coherence[i][j] = upperPart / lowerPart;
+      coherence[i][j] = lowerPart !== 0 ? upperPart / lowerPart : 0;
     }
   }
   return coherence;

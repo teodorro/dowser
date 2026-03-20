@@ -22,9 +22,12 @@ export const getQualityFactors = (
         fc2p1 += window2[j] * axis[j];
         fc2p2 += window2[j];
       }
-      const fc1 = fc1p1 / fc1p2;
-      const fc2 = fc2p1 / fc2p2;
-      const qualityFactor = (Math.log(fc1 / fc2) / Math.PI) * dt * (fc1 - fc2);
+      const fc1 = fc1p2 !== 0 ? fc1p1 / fc1p2 : 0;
+      const fc2 = fc2p2 !== 0 ? fc2p1 / fc2p2 : 0;
+      const qualityFactor =
+        fc1 !== fc2 && fc1 !== 0 && fc2 !== 0
+          ? (Math.log(fc1 / fc2) / Math.PI) * dt * (fc1 - fc2)
+          : 0;
       qualityFactorsAscan.push(qualityFactor);
     }
     return qualityFactorsAscan;

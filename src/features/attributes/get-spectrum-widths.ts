@@ -16,7 +16,7 @@ export const getSpectrumWidths = (
         widthUpper += (axis[i] - freqMean) ** 2 * window[i] ** 2;
         widthLower += window[i] ** 2;
       }
-      const width = Math.sqrt(widthUpper / widthLower);
+      const width = widthLower > 0 ? Math.sqrt(widthUpper / widthLower) : 0;
       return width;
     });
   });
