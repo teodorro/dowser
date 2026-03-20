@@ -7,11 +7,13 @@ import {
   TextField,
   type SelectChangeEvent,
 } from '@mui/material';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useBscanStore from '../../stores/bscan-store';
 import useUiStore from '../../stores/ui-store';
 import { AttributesModeType } from '../../types/attributes-types';
 import useAttributesStore from '../../stores/attributes-store';
+import { PlayCircle } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 
 export default function AttributesAnalysis() {
   const bscan = useBscanStore.use.bscan();
@@ -33,7 +35,10 @@ export default function AttributesAnalysis() {
 
   const workerRef = useRef<Worker | null>(null);
 
+  const [window, setWindow] = useState(windowSize);
+
   useEffect(() => {
+    setWindow(windowSize);
     setAttributesMode(true);
     setAttributesModeType(AttributesModeType.PeakFrequencies);
 
@@ -116,6 +121,10 @@ export default function AttributesAnalysis() {
     runAnalysis(attribute);
   };
 
+  const handleRunAnalysisButtonClick = () => {
+    setWindowSize(window);
+  };
+
   return (
     <Box
       sx={{
@@ -123,19 +132,28 @@ export default function AttributesAnalysis() {
         background: '#eee',
       }}
     >
-      <Box>
-        <TextField
-          id="windowSize"
-          label="Размер окна"
-          value={windowSize}
-          variant="standard"
-          type="number"
-          inputProps={{ step: 1, min: 1 }}
-          onChange={(e) => setWindowSize(getNotNaNValue(e.target.value, 0))}
-          error={!isLowStopFreqValid(windowSize)}
-          helperText={getLowStopFreqHelperText(windowSize)}
-          sx={{ display: 'flex', margin: '0.5em' }}
-        />
+      <Box sx={{ p: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <IconButton
+            aria-label="run-analysis"
+            sx={{ m: '0.1em' }}
+            onClick={() => handleRunAnalysisButtonClick()}
+          >
+            <PlayCircle></PlayCircle>
+          </IconButton>
+          <TextField
+            id="window"
+            label="Размер окна"
+            value={window}
+            variant="standard"
+            type="number"
+            inputProps={{ step: 1, min: 1 }}
+            onChange={(e) => setWindow(getNotNaNValue(e.target.value, 0))}
+            error={!isLowStopFreqValid(window)}
+            helperText={getLowStopFreqHelperText(window)}
+            sx={{ display: 'flex', margin: '0.5em' }}
+          />
+        </Box>
         <FormControl
           fullWidth
           sx={{ padding: '0.5em', mt: '1em', size: 'small' }}
