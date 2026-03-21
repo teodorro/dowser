@@ -377,7 +377,10 @@ export default function BscanFftCanvas() {
     const maxTicks = Math.max(2, Math.floor(vp.w / minLabelPx));
     const ticks = d3.ticks(xVisMin, xVisMax, maxTicks);
     const step = d3.tickStep(xVisMin, xVisMax, maxTicks);
-    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    let decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    if (!Number.isFinite(decimals)) {
+      decimals = 1;
+    }
     const fmx = d3.format(`.${decimals}f`);
 
     ctx.fillStyle = '#fff';
@@ -441,7 +444,10 @@ export default function BscanFftCanvas() {
     const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
     const ticks = d3.ticks(fVisMin, fVisMax, maxTicks);
     const step = d3.tickStep(fVisMin, fVisMax, maxTicks);
-    const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    let decimals = Math.max(0, -Math.floor(Math.log10(step)));
+    if (!Number.isFinite(decimals)) {
+      decimals = 1;
+    }
     const fmf = d3.format(`.${decimals}f`);
 
     ctx.fillStyle = '#fff';
