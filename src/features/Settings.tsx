@@ -64,6 +64,9 @@ export default function Settings() {
   const handleAttributesClose = () => {
     setActiveTab(TabType.ATTRIBUTES);
     setAnchorEl(null);
+    if (fftMode) {
+      setFftMode(false);
+    }
   };
 
   const getTabName = (tab: TabType): string => {
