@@ -5,6 +5,15 @@ import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import getPalette from './get-palette';
 import { Box } from '@mui/material';
 import * as d3 from 'd3';
+import useBscanViewExportStore from '../stores/bscan-view-export-store';
+import useUiStore from '../stores/ui-store';
+import { showError } from '../utils/show-error';
+import {
+  bscanViewSvgFilename,
+  bitmapToPngDataUrl,
+  buildBscanViewSvgString,
+  downloadTextFile,
+} from './export-bscan-view-svg';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -72,6 +81,70 @@ export default function BscanCanvas() {
     ro.observe(canvas);
     return () => ro.disconnect();
   }, []);
+
+  const setBscanViewExportHandler = useBscanViewExportStore.use.setBscanViewExportHandler();
+
+  useEffect(() => {
+    const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
+
+    const handler = async () => {
+      const canvas = canvasRef.current;
+      const bmp = bitmapRef.current;
+      if (!canvas || !bmp) {
+        showError('Нет изображения B-scan для экспорта');
+        return;
+      }
+      const { bscan, dx, dt, velocity } = useBscanStore.getState();
+      if (!bscan.length) {
+        showError('Нет данных B-scan');
+        return;
+      }
+
+      const cssW = canvas.clientWidth;
+      const cssH = canvas.clientHeight;
+      const vp = {
+        x: ruler.left,
+        y: ruler.top,
+        w: cssW - ruler.left - ruler.right,
+        h: cssH - ruler.top - ruler.bottom,
+      };
+
+      const { rows, cols } = dims;
+      if (!rows || !cols) {
+        showError('Нет данных B-scan');
+        return;
+      }
+
+      try {
+        const heatmapPngDataUrl = await bitmapToPngDataUrl(bmp);
+        const svg = buildBscanViewSvgString({
+          cssW,
+          cssH,
+          ruler,
+          vp,
+          scale,
+          tx,
+          ty,
+          cols,
+          rows,
+          heatmapPngDataUrl,
+          bscan,
+          dx,
+          dt,
+          velocity,
+        });
+        const baseName = useUiStore.getState().filename;
+        downloadTextFile(svg, bscanViewSvgFilename(baseName));
+      } catch (e) {
+        showError(
+          `Ошибка экспорта: ${(e as Error).message}`,
+        );
+      }
+    };
+
+    setBscanViewExportHandler(handler);
+    return () => setBscanViewExportHandler(null);
+  }, [scale, tx, ty, dims.rows, dims.cols, setBscanViewExportHandler]);
 
   useEffect(() => {
     lastX.current = 0;

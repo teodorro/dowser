@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Loupe,
   Palette,
+  SaveAlt,
   WidthNormal,
   WidthWide,
 } from '@mui/icons-material';
@@ -23,6 +24,7 @@ import { useShallow } from 'zustand/shallow';
 import { showError } from '../utils/show-error';
 import { useEffect, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
+import useBscanViewExportStore from '../stores/bscan-view-export-store';
 import TabType from '../types/tab-type';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 
@@ -60,6 +62,7 @@ export default function GprToolbar() {
 
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const setBscan = useBscanStore.use.setBscan();
+  const runBscanViewExport = useBscanViewExportStore.use.runBscanViewExport();
 
   const selectedPalette = useVisualSettingsStore.use.selectedPalette();
   const selectedPaletteSpectrum =
@@ -181,6 +184,28 @@ export default function GprToolbar() {
             />
           </IconButton>
 
+          {!fftMode && !attributesMode && (
+            <>
+              <IconButton
+                size="small"
+                edge="start"
+                color="inherit"
+                aria-label="export b-scan view as svg"
+                disabled={bscanFullAmp.length === 0}
+                sx={{ m: '0.1em' }}
+                onClick={() => {
+                  void runBscanViewExport().catch((err) => {
+                    showError(
+                      `Ошибка экспорта: ${(err as Error).message}`,
+                    );
+                  });
+                }}
+              >
+                <SaveAlt />
+              </IconButton>
+            </>
+          )}
+
           <UndoRedo></UndoRedo>
 
           <IconButton
@@ -218,22 +243,24 @@ export default function GprToolbar() {
           </Menu>
 
           {!fftMode && !attributesMode && (
-            <IconButton
-              component="label"
-              size="small"
-              edge="start"
-              color="inherit"
-              aria-label="logarithm"
-              sx={{
-                m: '0.1em',
-                border: logAmplitudeSelected2
-                  ? '2px solid #fff'
-                  : '2px solid #ffffff00',
-              }}
-              onClick={() => setLogAmplitudeSelected2(!logAmplitudeSelected2)}
-            >
-              <Loupe></Loupe>
-            </IconButton>
+            <>
+              <IconButton
+                component="label"
+                size="small"
+                edge="start"
+                color="inherit"
+                aria-label="logarithm"
+                sx={{
+                  m: '0.1em',
+                  border: logAmplitudeSelected2
+                    ? '2px solid #fff'
+                    : '2px solid #ffffff00',
+                }}
+                onClick={() => setLogAmplitudeSelected2(!logAmplitudeSelected2)}
+              >
+                <Loupe></Loupe>
+              </IconButton>
+            </>
           )}
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {filename}
