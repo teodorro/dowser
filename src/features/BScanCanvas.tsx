@@ -5,15 +5,14 @@ import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import getPalette from './get-palette';
 import { Box } from '@mui/material';
 import * as d3 from 'd3';
-import useBscanViewExportStore from '../stores/bscan-view-export-store';
+import useChartViewExportStore from '../stores/chart-view-export-store';
 import useUiStore from '../stores/ui-store';
 import { showError } from '../utils/show-error';
 import {
   bscanViewSvgFilename,
-  bitmapToPngDataUrl,
   buildBscanViewSvgString,
-  downloadTextFile,
-} from './export-bscan-view-svg';
+} from '../export-data/export-bscan-svg';
+import { downloadTextFile, bitmapToPngDataUrl } from '../export-data/shared';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -82,7 +81,8 @@ export default function BscanCanvas() {
     return () => ro.disconnect();
   }, []);
 
-  const setBscanViewExportHandler = useBscanViewExportStore.use.setBscanViewExportHandler();
+  const setChartViewExportHandler =
+    useChartViewExportStore.use.setChartViewExportHandler();
 
   useEffect(() => {
     const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
@@ -136,15 +136,13 @@ export default function BscanCanvas() {
         const baseName = useUiStore.getState().filename;
         downloadTextFile(svg, bscanViewSvgFilename(baseName));
       } catch (e) {
-        showError(
-          `Ошибка экспорта: ${(e as Error).message}`,
-        );
+        showError(`Ошибка экспорта: ${(e as Error).message}`);
       }
     };
 
-    setBscanViewExportHandler(handler);
-    return () => setBscanViewExportHandler(null);
-  }, [scale, tx, ty, dims.rows, dims.cols, setBscanViewExportHandler]);
+    setChartViewExportHandler(handler);
+    return () => setChartViewExportHandler(null);
+  }, [scale, tx, ty, dims.rows, dims.cols, setChartViewExportHandler]);
 
   useEffect(() => {
     lastX.current = 0;

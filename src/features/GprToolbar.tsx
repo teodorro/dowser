@@ -24,7 +24,7 @@ import { useShallow } from 'zustand/shallow';
 import { showError } from '../utils/show-error';
 import { useEffect, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
-import useBscanViewExportStore from '../stores/bscan-view-export-store';
+import useChartViewExportStore from '../stores/chart-view-export-store';
 import TabType from '../types/tab-type';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 
@@ -62,7 +62,7 @@ export default function GprToolbar() {
 
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const setBscan = useBscanStore.use.setBscan();
-  const runBscanViewExport = useBscanViewExportStore.use.runBscanViewExport();
+  const runBscanViewExport = useChartViewExportStore.use.runChartViewExport();
 
   const selectedPalette = useVisualSettingsStore.use.selectedPalette();
   const selectedPaletteSpectrum =
@@ -184,27 +184,23 @@ export default function GprToolbar() {
             />
           </IconButton>
 
-          {!fftMode && !attributesMode && (
-            <>
-              <IconButton
-                size="small"
-                edge="start"
-                color="inherit"
-                aria-label="export b-scan view as svg"
-                disabled={bscanFullAmp.length === 0}
-                sx={{ m: '0.1em' }}
-                onClick={() => {
-                  void runBscanViewExport().catch((err) => {
-                    showError(
-                      `Ошибка экспорта: ${(err as Error).message}`,
-                    );
-                  });
-                }}
-              >
-                <SaveAlt />
-              </IconButton>
-            </>
-          )}
+          {
+            <IconButton
+              size="small"
+              edge="start"
+              color="inherit"
+              aria-label="export current view as svg"
+              disabled={bscanFullAmp.length === 0}
+              sx={{ m: '0.1em' }}
+              onClick={() => {
+                void runBscanViewExport().catch((err) => {
+                  showError(`Ошибка экспорта: ${(err as Error).message}`);
+                });
+              }}
+            >
+              <SaveAlt />
+            </IconButton>
+          }
 
           <UndoRedo></UndoRedo>
 

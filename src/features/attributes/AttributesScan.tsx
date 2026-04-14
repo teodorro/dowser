@@ -7,6 +7,13 @@ import getPalette from '../get-palette';
 import useVisualSettingsStore from '../../stores/visual-settings-store';
 import unreachable from '../../utils/unreachable';
 import useUiStore from '../../stores/ui-store';
+import { showError } from '../../utils/show-error';
+import useChartViewExportStore from '../../stores/chart-view-export-store';
+import { bitmapToPngDataUrl, downloadTextFile } from '../../export-data/shared';
+import {
+  attributesViewSvgFilename,
+  buildAttributesViewSvgString,
+} from '../../export-data/export-attributes-svg';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -87,6 +94,69 @@ export default function AttributesScan() {
     ro.observe(canvas);
     return () => ro.disconnect();
   }, []);
+
+  const setChartViewExportHandler =
+    useChartViewExportStore.use.setChartViewExportHandler();
+
+  useEffect(() => {
+    const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
+
+    const handler = async () => {
+      const canvas = canvasRef.current;
+      const bmp = bitmapRef.current;
+      if (!canvas || !bmp) {
+        showError('Нет изображения атрибутов для экспорта');
+        return;
+      }
+      const { bscan, dx, dt, velocity } = useBscanStore.getState();
+      if (!bscan.length) {
+        showError('Нет данных по атрибутам');
+        return;
+      }
+
+      const cssW = canvas.clientWidth;
+      const cssH = canvas.clientHeight;
+      const vp = {
+        x: ruler.left,
+        y: ruler.top,
+        w: cssW - ruler.left - ruler.right,
+        h: cssH - ruler.top - ruler.bottom,
+      };
+
+      const { rows, cols } = dims;
+      if (!rows || !cols) {
+        showError('Нет данных B-scan');
+        return;
+      }
+
+      try {
+        const heatmapPngDataUrl = await bitmapToPngDataUrl(bmp);
+        const svg = buildAttributesViewSvgString({
+          cssW,
+          cssH,
+          ruler,
+          vp,
+          scale,
+          tx,
+          ty,
+          cols,
+          rows,
+          heatmapPngDataUrl,
+          bscan,
+          dx,
+          dt,
+          velocity,
+        });
+        const baseName = useUiStore.getState().filename;
+        downloadTextFile(svg, attributesViewSvgFilename(baseName));
+      } catch (e) {
+        showError(`Ошибка экспорта: ${(e as Error).message}`);
+      }
+    };
+
+    setChartViewExportHandler(handler);
+    return () => setChartViewExportHandler(null);
+  }, [scale, tx, ty, dims.rows, dims.cols, setChartViewExportHandler]);
 
   useEffect(() => {
     const worker = new Worker(
