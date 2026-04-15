@@ -1,14 +1,14 @@
 import { convertInd2Amp } from './convert-ind-2-amp';
 
 export const readGeoFile = (raw: Uint8Array): number[][] => {
-  const bscanLengthArray = Array.from(raw.slice(13, 16));
-  const bscanLength =
-    bscanLengthArray[2] + bscanLengthArray[1] * 8 + bscanLengthArray[0] * 64;
+  // const bscanLengthArray = Array.from(raw.slice(13, 16));
+  // const bscanLength =
+  //   bscanLengthArray[2] + bscanLengthArray[1] * 8 + bscanLengthArray[0] * 64;
   const ascanHeaderPart = new Uint8Array([0xa1, 0x00]);
   const indices: number[] = [];
   const bscan: number[][] = [];
 
-  console.log(bscanLength);
+  // console.log(bscanLength);
   for (let i = 16; i < raw.length - 2; i++) {
     if (raw[i] === ascanHeaderPart[0] && raw[i + 1] === ascanHeaderPart[1])
       indices.push(i);
@@ -36,12 +36,14 @@ export const readGeoFile = (raw: Uint8Array): number[][] => {
   indices.forEach((index) => {
     const ascan = raw.slice(
       index + ascanHeaderLength,
-      index + ascanHeaderLength + ascanDataLength
+      index + ascanHeaderLength + ascanDataLength,
     );
     bscan.push(Array.from(ascan));
   });
 
   convertIndicesToAmplitudes(bscan);
+
+  console.log('bscan length:', bscan.length);
 
   return bscan;
 };
