@@ -10,10 +10,14 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import useBscanStore from '../../stores/bscan-store';
 import useUiStore from '../../stores/ui-store';
-import { AttributesModeType } from '../../types/attributes-types';
+import {
+  AttributesModeType,
+  type FrequenciesWindow,
+} from '../../types/attributes-types';
 import useAttributesStore from '../../stores/attributes-store';
 import { PlayCircle } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
+import WindowSpectrum from '../attributes/WindowSpectrum';
 
 export default function AttributesAnalysis() {
   const bscan = useBscanStore.use.bscan();
@@ -28,6 +32,7 @@ export default function AttributesAnalysis() {
   const setCoherence = useAttributesStore.use.setCoherence();
   const setWindowSize = useAttributesStore.use.setWindowSize();
   const setSelectedAttribute = useAttributesStore.use.setSelectedAttribute();
+  const setFrequencies = useAttributesStore.use.setFrequencies();
 
   const setAttributesModeType = useUiStore.use.setAttributesModeType();
   const setAttributesMode = useUiStore.use.setAttributesMode();
@@ -54,18 +59,22 @@ export default function AttributesAnalysis() {
           | 'spectrumWidths'
           | 'qualityFactors'
           | 'coherence';
-        result: number[][];
+        result: {
+          result: number[][];
+          windowFrequencies: FrequenciesWindow[][];
+        };
       }>,
     ) => {
       if (e.data.type === 'peakFrequencies') {
-        setPeakFrequencies(e.data.result);
+        setPeakFrequencies(e.data.result.result);
       } else if (e.data.type === 'spectrumWidths') {
-        setSpectrumWidths(e.data.result);
+        setSpectrumWidths(e.data.result.result);
       } else if (e.data.type === 'qualityFactors') {
-        setQualityFactors(e.data.result);
+        setQualityFactors(e.data.result.result);
       } else if (e.data.type === 'coherence') {
-        setCoherence(e.data.result);
+        setCoherence(e.data.result.result);
       }
+      setFrequencies(e.data.result.windowFrequencies);
 
       setIsLoading(false);
     };
@@ -192,6 +201,7 @@ export default function AttributesAnalysis() {
             </Select>
           </FormControl>
         </form>
+        <WindowSpectrum />
       </Box>
     </Box>
   );

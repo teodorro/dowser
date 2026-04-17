@@ -15,6 +15,7 @@ import {
   buildAttributesViewSvgString,
 } from '../../export-data/export-attributes-svg';
 import { ZoomOutMapOutlined } from '@mui/icons-material';
+import type { FrequenciesWindow } from '../../types/attributes-types';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -45,6 +46,7 @@ export default function AttributesScan() {
   const setQualityFactors = useAttributesStore.use.setQualityFactors();
   const setCoherence = useAttributesStore.use.setCoherence();
   const setScanToShow = useAttributesStore.use.setScanToShow();
+  const setFrequencies = useAttributesStore.use.setFrequencies();
 
   const selectedPaletteAttributes =
     useVisualSettingsStore.use.selectedPaletteAttributes();
@@ -172,19 +174,22 @@ export default function AttributesScan() {
           | 'spectrumWidths'
           | 'qualityFactors'
           | 'coherence';
-        result: number[][];
+        result: {
+          result: number[][];
+          windowFrequencies: FrequenciesWindow[][];
+        };
       }>,
     ) => {
       if (e.data.type === 'peakFrequencies') {
-        setPeakFrequencies(e.data.result);
+        setPeakFrequencies(e.data.result.result);
       } else if (e.data.type === 'spectrumWidths') {
-        setSpectrumWidths(e.data.result);
+        setSpectrumWidths(e.data.result.result);
       } else if (e.data.type === 'qualityFactors') {
-        setQualityFactors(e.data.result);
+        setQualityFactors(e.data.result.result);
       } else if (e.data.type === 'coherence') {
-        setCoherence(e.data.result);
+        setCoherence(e.data.result.result);
       }
-
+      setFrequencies(e.data.result.windowFrequencies);
       setIsLoading(false);
     };
 

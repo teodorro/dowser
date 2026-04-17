@@ -36,22 +36,34 @@ self.onmessage = (e: MessageEvent<RequestMessage>) => {
 
   switch (msg.type) {
     case 'peakFrequencies': {
-      const result = getPeakFrequencies(windowFrequencies, msg.dt);
+      const result = {
+        result: getPeakFrequencies(windowFrequencies, msg.dt),
+        windowFrequencies: windowFrequencies,
+      };
       self.postMessage({ type: msg.type, result });
       break;
     }
     case 'spectrumWidths': {
-      const result = getSpectrumWidths(windowFrequencies, msg.dt);
+      const result = {
+        result: getSpectrumWidths(windowFrequencies, msg.dt),
+        windowFrequencies: windowFrequencies,
+      };
       self.postMessage({ type: msg.type, result });
       break;
     }
     case 'qualityFactors': {
-      const result = getQualityFactors(windowFrequencies, msg.dt);
+      const result = {
+        result: getQualityFactors(windowFrequencies, msg.dt),
+        windowFrequencies: windowFrequencies,
+      };
       self.postMessage({ type: msg.type, result });
       break;
     }
     case 'coherence': {
-      const result = getCoherence(msg.bscan, msg.windowSize);
+      const result = {
+        result: getCoherence(msg.bscan, msg.windowSize),
+        windowFrequencies: windowFrequencies,
+      };
       self.postMessage({ type: msg.type, result });
       break;
     }
