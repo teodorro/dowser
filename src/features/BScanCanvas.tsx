@@ -3,7 +3,7 @@ import useBscanStore from '../stores/bscan-store';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 import { logAmplitude } from '../processing/visual-processing/log-amplitude';
 import getPalette from './get-palette';
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import * as d3 from 'd3';
 import useChartViewExportStore from '../stores/chart-view-export-store';
 import useUiStore from '../stores/ui-store';
@@ -13,6 +13,7 @@ import {
   buildBscanViewSvgString,
 } from '../export-data/export-bscan-svg';
 import { downloadTextFile, bitmapToPngDataUrl } from '../export-data/shared';
+import { ZoomOutMapOutlined } from '@mui/icons-material';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -628,6 +629,13 @@ export default function BscanCanvas() {
     }
   };
 
+  const resetPosition = () => {
+    setTx(0);
+    setTy(0);
+  };
+
+  const canShowReset = tx !== 0 || ty !== 0;
+
   return (
     <Box
       sx={{
@@ -646,6 +654,26 @@ export default function BscanCanvas() {
           background: '#fff',
         }}
       />
+      <IconButton
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          opacity: 0,
+          margin: 0.5,
+          pointerEvents: canShowReset ? 'auto' : 'none',
+          transition: 'opacity 120ms ease',
+          ...(canShowReset && {
+            '&:hover': {
+              opacity: 1,
+            },
+          }),
+          color: 'grey',
+        }}
+        onClick={resetPosition}
+      >
+        <ZoomOutMapOutlined></ZoomOutMapOutlined>
+      </IconButton>
     </Box>
   );
 }

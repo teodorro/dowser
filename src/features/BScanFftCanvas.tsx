@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
 import useVisualSettingsStore from '../stores/visual-settings-store';
@@ -17,6 +17,7 @@ import {
   buildFftBscanViewSvgString,
   fftBscanViewSvgFilename,
 } from '../export-data/export-fft-svg';
+import { ZoomOutMapOutlined } from '@mui/icons-material';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -571,6 +572,13 @@ export default function BscanFftCanvas() {
     }
   };
 
+  const resetPosition = () => {
+    setTx(0);
+    setTy(0);
+  };
+
+  const canShowReset = tx !== 0 || ty !== 0;
+
   return (
     <Box
       sx={{
@@ -589,6 +597,26 @@ export default function BscanFftCanvas() {
           background: '#fff',
         }}
       />
+      <IconButton
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          opacity: 0,
+          margin: 0.5,
+          pointerEvents: canShowReset ? 'auto' : 'none',
+          transition: 'opacity 120ms ease',
+          ...(canShowReset && {
+            '&:hover': {
+              opacity: 1,
+            },
+          }),
+          color: 'grey',
+        }}
+        onClick={resetPosition}
+      >
+        <ZoomOutMapOutlined></ZoomOutMapOutlined>
+      </IconButton>
     </Box>
   );
 }
