@@ -121,7 +121,10 @@ export default function AttributesAnalysis() {
     runAnalysis(attribute);
   };
 
-  const handleRunAnalysisButtonClick = () => {
+  const handleRunAnalysisButtonClick = (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
     setWindowSize(window);
   };
 
@@ -133,46 +136,62 @@ export default function AttributesAnalysis() {
       }}
     >
       <Box sx={{ p: 0.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton
-            aria-label="run-analysis"
-            sx={{ m: '0.1em' }}
-            onClick={() => handleRunAnalysisButtonClick()}
-          >
-            <PlayCircle></PlayCircle>
-          </IconButton>
-          <TextField
-            id="window"
-            label="Размер окна"
-            value={window}
-            variant="standard"
-            type="number"
-            inputProps={{ step: 1, min: 1 }}
-            onChange={(e) => setWindow(getNotNaNValue(e.target.value, 0))}
-            error={!isLowStopFreqValid(window)}
-            helperText={getLowStopFreqHelperText(window)}
-            sx={{ display: 'flex', margin: '0.5em' }}
-          />
-        </Box>
-        <FormControl
-          fullWidth
-          sx={{ padding: '0.5em', mt: '1em', size: 'small' }}
+        <form
+          style={{
+            display: 'flex',
+            alignItems: 'start',
+            flexDirection: 'column',
+          }}
+          onSubmit={(event) => handleRunAnalysisButtonClick(event)}
         >
-          <InputLabel id="select-attribute-label">Атрибут</InputLabel>
-          <Select
-            labelId="select-attribute-label"
-            id="select-attribute"
-            value={selectedAttribute}
-            label="Атрибут"
-            onChange={handleChangeAttribute}
-            size="small"
+          <Box sx={{ display: 'flex', alignItems: 'start', width: '100%' }}>
+            <IconButton
+              aria-label="run-analysis"
+              sx={{ m: '0.1em', mt: '0.5em' }}
+              type="submit"
+            >
+              <PlayCircle></PlayCircle>
+            </IconButton>
+            <TextField
+              id="window"
+              label="Размер окна"
+              value={window}
+              variant="standard"
+              type="number"
+              inputProps={{ step: 1, min: 1 }}
+              onChange={(e) => setWindow(getNotNaNValue(e.target.value, 0))}
+              error={!isLowStopFreqValid(window)}
+              helperText={getLowStopFreqHelperText(window)}
+              sx={{ display: 'flex', margin: '0.5em', flexGrow: 1 }}
+            />
+          </Box>
+          <FormControl
+            fullWidth
+            sx={{
+              mt: '1em',
+              size: 'small',
+              display: 'flex',
+            }}
           >
-            <MenuItem value="peakFrequencies">Пиковая частота</MenuItem>
-            <MenuItem value="spectrumWidths">Спектральная ширина</MenuItem>
-            <MenuItem value="qualityFactors">Добротность</MenuItem>
-            <MenuItem value="coherence">Когерентность</MenuItem>
-          </Select>
-        </FormControl>
+            <InputLabel id="select-attribute-label" sx={{ m: '0.5em' }}>
+              Атрибут
+            </InputLabel>
+            <Select
+              labelId="select-attribute-label"
+              id="select-attribute"
+              value={selectedAttribute}
+              label="Атрибут"
+              onChange={handleChangeAttribute}
+              size="small"
+              sx={{ m: '0.5em', display: 'flex', flexGrow: 1 }}
+            >
+              <MenuItem value="peakFrequencies">Пиковая частота</MenuItem>
+              <MenuItem value="spectrumWidths">Спектральная ширина</MenuItem>
+              <MenuItem value="qualityFactors">Добротность</MenuItem>
+              <MenuItem value="coherence">Когерентность</MenuItem>
+            </Select>
+          </FormControl>
+        </form>
       </Box>
     </Box>
   );
