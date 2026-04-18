@@ -17,7 +17,9 @@ export default function WindowSpectrum() {
 
   const freqAxis = useMemo(() => {
     if (frequencies == null || frequencies.length === 0) return [];
-    return fftFreqAxisHalf(frequencies[0][0].length, dt);
+    return fftFreqAxisHalf(frequencies[0][0].length, dt).map((f) =>
+      Math.round(f),
+    );
   }, [frequencies, dt]);
 
   const [option, setOption] = useState<echarts.EChartsOption | null>({
