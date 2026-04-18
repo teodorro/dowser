@@ -13,7 +13,7 @@ import {
   buildBscanViewSvgString,
 } from '../export-data/export-bscan-svg';
 import { downloadTextFile, bitmapToPngDataUrl } from '../export-data/shared';
-import { ZoomOutMapOutlined } from '@mui/icons-material';
+import { Start, ZoomOutMapOutlined } from '@mui/icons-material';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -629,12 +629,18 @@ export default function BscanCanvas() {
     }
   };
 
-  const resetPosition = () => {
+  const resetFullPosition = () => {
     setTx(0);
     setTy(0);
   };
 
-  const canShowReset = tx !== 0 || ty !== 0;
+  const canShowFullReset = tx !== 0 || ty !== 0;
+
+  const resetVerticalPosition = () => {
+    setTy(0);
+  };
+
+  const canShowVerticalReset = ty !== 0;
 
   return (
     <Box
@@ -661,18 +667,39 @@ export default function BscanCanvas() {
           left: 0,
           opacity: 0,
           margin: 0.5,
-          pointerEvents: canShowReset ? 'auto' : 'none',
+          pointerEvents: canShowFullReset ? 'auto' : 'none',
           transition: 'opacity 120ms ease',
-          ...(canShowReset && {
+          ...(canShowFullReset && {
             '&:hover': {
               opacity: 1,
             },
           }),
           color: 'grey',
         }}
-        onClick={resetPosition}
+        onClick={resetFullPosition}
       >
         <ZoomOutMapOutlined></ZoomOutMapOutlined>
+      </IconButton>
+      <IconButton
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          opacity: 0,
+          margin: 0.5,
+          pointerEvents: canShowVerticalReset ? 'auto' : 'none',
+          transition: 'opacity 120ms ease',
+          ...(canShowVerticalReset && {
+            '&:hover': {
+              opacity: 1,
+            },
+          }),
+          color: 'grey',
+          rotate: '90deg',
+        }}
+        onClick={resetVerticalPosition}
+      >
+        <Start></Start>
       </IconButton>
     </Box>
   );
