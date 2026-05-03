@@ -54,9 +54,8 @@ export default function GprToolbar() {
   const ascanHidden = useUiStore.use.ascanHidden();
   const filename = useUiStore.use.filename();
 
-  const fftMode = useUiStore.use.fftMode();
-  const attributesMode = useUiStore.use.attributesMode();
-  const setFftMode = useUiStore.use.setFftMode();
+  const viewMode = useUiStore.use.viewMode();
+  const setViewMode = useUiStore.use.setViewMode();
   const setAscanHidden = useUiStore.use.setAscanHidden();
   const setActiveTab = useUiStore.use.setActiveTab();
 
@@ -93,15 +92,15 @@ export default function GprToolbar() {
   useEffect(() => {
     clearUndoRedo();
     setBscan(bscanFullAmp);
-    setFftMode(false);
-  }, [bscanFullAmp]);
+    setViewMode({ type: 'bscan' });
+  }, [bscanFullAmp, clearUndoRedo, setBscan, setViewMode]);
 
   useEffect(() => {
-    if (attributesMode) {
+    if (viewMode.type === 'attributes') {
       setSelectedIndex(
         paletteOptions.findIndex((p) => p.value === selectedPaletteAttributes),
       );
-    } else if (fftMode) {
+    } else if (viewMode.type === 'fft') {
       setSelectedIndex(
         paletteOptions.findIndex((p) => p.value === selectedPaletteSpectrum),
       );
@@ -111,11 +110,11 @@ export default function GprToolbar() {
       );
     }
   }, [
-    fftMode,
-    attributesMode,
+    viewMode,
     selectedPalette,
     selectedPaletteAttributes,
     selectedPaletteSpectrum,
+    paletteOptions,
   ]);
 
   const onLoadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,9 +138,9 @@ export default function GprToolbar() {
 
   const handleMenuPaletteItemClick = (index: number) => {
     setSelectedIndex(index);
-    if (attributesMode) {
+    if (viewMode.type === 'attributes') {
       setSelectedPaletteAttributes(paletteOptions[index].value);
-    } else if (fftMode) {
+    } else if (viewMode.type === 'fft') {
       setSelectedPaletteSpectrum(paletteOptions[index].value);
     } else {
       setSelectedPalette(paletteOptions[index].value);
@@ -238,7 +237,7 @@ export default function GprToolbar() {
             ))}
           </Menu>
 
-          {!fftMode && !attributesMode && (
+          {viewMode.type !== 'fft' && viewMode.type !== 'attributes' && (
             <>
               <IconButton
                 component="label"

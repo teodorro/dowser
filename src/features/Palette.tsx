@@ -5,6 +5,7 @@ import { showError } from '../utils/show-error';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 import { getPaletteRaw } from './get-palette';
 import useUiStore from '../stores/ui-store';
+import unreachable from '../utils/unreachable';
 
 export default function Palette() {
   const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
@@ -16,8 +17,7 @@ export default function Palette() {
   const selectedPaletteAttributes =
     useVisualSettingsStore.use.selectedPaletteAttributes();
 
-  const fftMode = useUiStore.use.fftMode();
-  const attributesMode = useUiStore.use.attributesMode();
+  const viewMode = useUiStore.use.viewMode();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,8 +35,7 @@ export default function Palette() {
     selectedPalette,
     selectedPaletteSpectrum,
     selectedPaletteAttributes,
-    fftMode,
-    attributesMode,
+    viewMode,
   ]);
 
   redrawRef.current = () => {
@@ -55,13 +54,22 @@ export default function Palette() {
 
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      const color = getPaletteRaw(
-        fftMode
-          ? selectedPaletteSpectrum
-          : attributesMode
-            ? selectedPaletteAttributes
-            : selectedPalette,
-      )(t);
+      let palette = '';
+      switch (viewMode.type) {
+        case 'bscan':
+          palette = selectedPalette;
+          break;
+        case 'fft':
+          palette = selectedPaletteSpectrum;
+          break;
+        case 'attributes':
+          palette = selectedPaletteAttributes;
+          break;
+        default:
+          unreachable(viewMode);
+          break;
+      }
+      const color = getPaletteRaw(palette)(t);
       gradient.addColorStop(t, color);
     }
 

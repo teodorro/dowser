@@ -9,15 +9,12 @@ import BscanFftCanvas from './features/BScanFftCanvas';
 import BscanCanvas from './features/b-scan/BScanCanvas';
 import StatusBar from './features/StatusBar';
 import useBscanStore from './stores/bscan-store';
-import { AttributesModeType } from './types/attributes-types';
 import AttributesScan from './features/attributes/AttributesScan';
 import Palette from './features/Palette';
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
-  const fftMode = useUiStore.use.fftMode();
-  const attributesMode = useUiStore.use.attributesMode();
-  const attributesModeType = useUiStore.use.attributesModeType();
+  const viewMode = useUiStore.use.viewMode();
   const isLoading = useUiStore.use.isLoading();
 
   const isDataLoaded = useBscanStore.use.bscanFullAmp().length > 0;
@@ -61,12 +58,11 @@ function App() {
                 flexDirection: 'row',
               }}
             >
-              {!fftMode && !attributesMode && <BscanCanvas></BscanCanvas>}
-              {fftMode && !attributesMode && <BscanFftCanvas></BscanFftCanvas>}
-              {attributesMode &&
-                attributesModeType === AttributesModeType.PeakFrequencies && (
-                  <AttributesScan></AttributesScan>
-                )}
+              {viewMode.type === 'bscan' && <BscanCanvas></BscanCanvas>}
+              {viewMode.type === 'fft' && <BscanFftCanvas></BscanFftCanvas>}
+              {viewMode.type === 'attributes' && (
+                <AttributesScan></AttributesScan>
+              )}
               {!ascanHidden && (
                 <Box
                   sx={{

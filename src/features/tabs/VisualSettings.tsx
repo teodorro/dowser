@@ -12,7 +12,7 @@ import useVisualSettingsStore from '../../stores/visual-settings-store';
 import useUiStore from '../../stores/ui-store';
 
 export default function VisualSettings() {
-  const fftMode = useUiStore.use.fftMode();
+  const viewMode = useUiStore.use.viewMode();
 
   const selectedPalette = useVisualSettingsStore.use.selectedPalette();
   const selectedPaletteSpectrum =
@@ -59,7 +59,7 @@ export default function VisualSettings() {
         background: '#eee',
       }}
     >
-      {!fftMode && (
+      {viewMode.type !== 'fft' && (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
             checked={logAmplitudeSelected}
@@ -74,7 +74,7 @@ export default function VisualSettings() {
           </Box>
         </Box>
       )}
-      {!fftMode && (
+      {viewMode.type !== 'fft' && (
         <FormControl
           fullWidth
           sx={{ padding: '0.5em', mt: '1em', size: 'small' }}
@@ -99,7 +99,7 @@ export default function VisualSettings() {
         </FormControl>
       )}
 
-      {fftMode && (
+      {viewMode.type === 'fft' && (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Switch
             checked={logAmplitudeSelectedSpectrum}
@@ -110,7 +110,7 @@ export default function VisualSettings() {
           </Box>
         </Box>
       )}
-      {fftMode && (
+      {viewMode.type === 'fft' && (
         <FormControl
           fullWidth
           sx={{ padding: '0.5em', mt: '1em', size: 'small' }}

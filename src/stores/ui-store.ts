@@ -1,22 +1,18 @@
 import { create } from 'zustand';
 import { createSelectors } from '../utils/create-selectors';
-import { AttributesModeType } from '../types/attributes-types';
 import TabType from '../types/tab-type';
+import type { ViewType } from '../types/view-type';
 
 interface IUiStore {
   filename: string;
   ascanHidden: boolean;
-  fftMode: boolean;
-  attributesMode: boolean;
-  attributesModeType: AttributesModeType;
+  viewMode: ViewType;
   activeTab: TabType;
   isLoading: boolean;
 
   setFilename: (filename: string) => void;
   setAscanHidden: (hidden: boolean) => void;
-  setFftMode: (mode: boolean) => void;
-  setAttributesMode: (mode: boolean) => void;
-  setAttributesModeType: (type: AttributesModeType) => void;
+  setViewMode: (type: ViewType) => void;
   setActiveTab: (tab: TabType) => void;
   setIsLoading: (loading: boolean) => void;
 }
@@ -24,18 +20,13 @@ interface IUiStore {
 const useUiStoreBase = create<IUiStore>((set) => ({
   filename: 'Dowser',
   ascanHidden: true,
-  fftMode: false,
-  attributesMode: false,
-  attributesModeType: AttributesModeType.PeakFrequencies,
+  viewMode: { type: 'bscan' },
   activeTab: TabType.SIZES,
   isLoading: false,
 
   setFilename: (filename: string) => set(() => ({ filename })),
   setAscanHidden: (hidden: boolean) => set(() => ({ ascanHidden: hidden })),
-  setFftMode: (mode: boolean) => set(() => ({ fftMode: mode })),
-  setAttributesMode: (mode: boolean) => set(() => ({ attributesMode: mode })),
-  setAttributesModeType: (type: AttributesModeType) =>
-    set(() => ({ attributesModeType: type })),
+  setViewMode: (type: ViewType) => set(() => ({ viewMode: type })),
   setActiveTab: (tab: TabType) => set(() => ({ activeTab: tab as TabType })),
   setIsLoading: (loading: boolean) => set(() => ({ isLoading: loading })),
 }));

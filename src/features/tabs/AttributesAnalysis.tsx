@@ -34,8 +34,7 @@ export default function AttributesAnalysis() {
   const setSelectedAttribute = useAttributesStore.use.setSelectedAttribute();
   const setFrequencies = useAttributesStore.use.setFrequencies();
 
-  const setAttributesModeType = useUiStore.use.setAttributesModeType();
-  const setAttributesMode = useUiStore.use.setAttributesMode();
+  const setViewMode = useUiStore.use.setViewMode();
   const setIsLoading = useUiStore.use.setIsLoading();
 
   const workerRef = useRef<Worker | null>(null);
@@ -44,8 +43,10 @@ export default function AttributesAnalysis() {
 
   useEffect(() => {
     setWindow(windowSize);
-    setAttributesMode(true);
-    setAttributesModeType(AttributesModeType.PeakFrequencies);
+    setViewMode({
+      type: 'attributes',
+      mode: AttributesModeType.PeakFrequencies,
+    });
 
     const worker = new Worker(
       new URL('../attributes/attributes-worker.ts', import.meta.url),
@@ -82,7 +83,6 @@ export default function AttributesAnalysis() {
     workerRef.current = worker;
 
     return () => {
-      setAttributesMode(false);
       worker.terminate();
       workerRef.current = null;
     };
