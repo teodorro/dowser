@@ -138,7 +138,7 @@ export default function Ascan() {
   return (
     <Box
       sx={{
-        width: '25em',
+        width: '250px',
         height: '100%',
         overflowX: 'auto',
         overflowY: 'hidden',

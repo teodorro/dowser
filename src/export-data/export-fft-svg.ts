@@ -1,11 +1,7 @@
 import * as d3 from 'd3';
-import {
-  clamp,
-  escapeXml,
-  type RulerMargins,
-  type ViewportRect,
-} from './shared';
+import { escapeXml, type RulerMargins, type ViewportRect } from './shared';
 import { buildLengthRulerSvgCore } from './axes';
+import clamp from '../shared/clamp';
 
 export interface FftBscanViewSvgLayout {
   cssW: number;

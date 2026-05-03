@@ -1,11 +1,7 @@
 import * as d3 from 'd3';
-import {
-  clamp,
-  escapeXml,
-  type RulerMargins,
-  type ViewportRect,
-} from './shared';
+import { escapeXml, type RulerMargins, type ViewportRect } from './shared';
 import type { BscanViewSvgLayout } from './export-bscan-svg';
+import clamp from '../shared/clamp';
 
 export function buildLengthRulerSvgCore(params: {
   vp: ViewportRect;

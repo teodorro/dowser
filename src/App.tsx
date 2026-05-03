@@ -6,11 +6,12 @@ import Settings from './features/Settings';
 import useUiStore from './stores/ui-store';
 import ErrorNotification from './components/ErrorNotification';
 import BscanFftCanvas from './features/BScanFftCanvas';
-import BscanCanvas from './features/BScanCanvas';
+import BscanCanvas from './features/b-scan/BScanCanvas';
 import StatusBar from './features/StatusBar';
 import useBscanStore from './stores/bscan-store';
 import { AttributesModeType } from './types/attributes-types';
 import AttributesScan from './features/attributes/AttributesScan';
+import Palette from './features/Palette';
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
@@ -66,7 +67,18 @@ function App() {
                 attributesModeType === AttributesModeType.PeakFrequencies && (
                   <AttributesScan></AttributesScan>
                 )}
-              {!ascanHidden && <Ascan></Ascan>}
+              {!ascanHidden && (
+                <Box
+                  sx={{
+                    width: '250px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Ascan></Ascan>
+                  <Palette></Palette>
+                </Box>
+              )}
             </Box>
             <StatusBar></StatusBar>
           </Box>

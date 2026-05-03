@@ -7,9 +7,6 @@ export type RulerMargins = {
 
 export type ViewportRect = { x: number; y: number; w: number; h: number };
 
-export const clamp = (v: number, a: number, b: number) =>
-  Math.max(a, Math.min(b, v));
-
 export function escapeXml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
