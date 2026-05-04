@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Nullable } from '../types/utility-types';
 import { showError } from '../utils/show-error';
 import useVisualSettingsStore from '../stores/visual-settings-store';
