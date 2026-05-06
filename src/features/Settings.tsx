@@ -9,6 +9,7 @@ import { getFftBscan } from '../processing/data-processing/fft-bscan';
 import useBscanStore from '../stores/bscan-store';
 import TabType from '../types/tab-type';
 import AttributesAnalysis from './tabs/AttributesAnalysis';
+import { AttributesModeType } from '../types/attributes-types';
 
 export default function Settings() {
   const SIZES = 'Размеры';
@@ -16,14 +17,13 @@ export default function Settings() {
   const SPECTRUM = 'Спектр';
   const ATTRIBUTES = 'Атрибуты';
 
-  const setFftMode = useUiStore.use.setFftMode();
-  const fftMode = useUiStore.use.fftMode();
-
   const bscan = useBscanStore.use.bscan();
   const setBscanFft = useBscanStore.use.setBscanFft();
 
   const activeTab = useUiStore.use.activeTab();
+  const viewMode = useUiStore.use.viewMode();
   const setActiveTab = useUiStore.use.setActiveTab();
+  const setViewMode = useUiStore.use.setViewMode();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -39,24 +39,20 @@ export default function Settings() {
   const handleSizesClose = () => {
     setActiveTab(TabType.SIZES);
     setAnchorEl(null);
-    if (fftMode) {
-      setFftMode(false);
-    }
+    setViewMode({ type: 'bscan' });
   };
 
   const handleProcessingClose = () => {
     setActiveTab(TabType.PROCESSING);
     setAnchorEl(null);
-    if (fftMode) {
-      setFftMode(false);
-    }
+    setViewMode({ type: 'bscan' });
   };
 
   const handleSpectrumClose = () => {
     setActiveTab(TabType.SPECTRUM);
     setAnchorEl(null);
-    if (!fftMode) {
-      setFftMode(true);
+    if (viewMode.type !== 'fft') {
+      setViewMode({ type: 'fft' });
       setBscanFft(getFftBscan(bscan).bscan);
     }
   };
@@ -64,9 +60,10 @@ export default function Settings() {
   const handleAttributesClose = () => {
     setActiveTab(TabType.ATTRIBUTES);
     setAnchorEl(null);
-    if (fftMode) {
-      setFftMode(false);
-    }
+    setViewMode({
+      type: 'attributes',
+      mode: AttributesModeType.PeakFrequencies,
+    });
   };
 
   const getTabName = (tab: TabType): string => {

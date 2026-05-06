@@ -8,6 +8,10 @@ const amps = [
 
 export const convertInd2Amp = (ind: number): number => {
   const step = ind - 63;
-  const amp = Math.sign(step) * amps[Math.abs(step)];
+  let amp = Math.sign(step) * amps[Math.abs(step)];
+  if (isNaN(amp)) {
+    console.log('amp is NaN');
+    amp = Math.sign(step) * amps[amps.length - 1];
+  }
   return amp;
 };

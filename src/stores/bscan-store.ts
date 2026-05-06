@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createSelectors } from '../utils/create-selectors';
+import type { Optional } from '../types/utility-types';
 
 interface IBscanStore {
   bscan: number[][];
@@ -12,8 +13,12 @@ interface IBscanStore {
   eps: number;
   velocity: number;
   selectedYAxis: string;
-  indexAscan: number | undefined;
-  indexT: number | undefined;
+  indexAscan: Optional<number>;
+  indexT: Optional<number>;
+  valueRange: Optional<{
+    min: number;
+    max: number;
+  }>;
 
   setBscan: (dtoBscan: number[][]) => void;
   setBscanToShow: (dtoBscan: number[][]) => void;
@@ -25,8 +30,9 @@ interface IBscanStore {
   setEps: (e: number) => void;
   setVelocity: (v: number) => void;
   setSelectedYAxis: (axis: string) => void;
-  setIndexAscan: (ind: number | undefined) => void;
-  setIndexT: (ind: number | undefined) => void;
+  setIndexAscan: (ind: Optional<number>) => void;
+  setIndexT: (ind: Optional<number>) => void;
+  setValueRange: (range: Optional<{ min: number; max: number }>) => void;
 }
 
 const useBscanStoreBase = create<IBscanStore>((set) => ({
@@ -42,6 +48,7 @@ const useBscanStoreBase = create<IBscanStore>((set) => ({
   selectedYAxis: 'time',
   indexAscan: undefined,
   indexT: undefined,
+  valueRange: undefined,
 
   setBscan: (dtoBscan) => set(() => ({ bscan: dtoBscan })),
   setBscanToShow: (dtoBscan) => set(() => ({ bscanToShow: dtoBscan })),
@@ -55,6 +62,7 @@ const useBscanStoreBase = create<IBscanStore>((set) => ({
   setSelectedYAxis: (axis) => set(() => ({ selectedYAxis: axis })),
   setIndexAscan: (ind) => set(() => ({ indexAscan: ind })),
   setIndexT: (ind) => set(() => ({ indexT: ind })),
+  setValueRange: (range) => set(() => ({ valueRange: range })),
 }));
 
 const useBscanStore = createSelectors(useBscanStoreBase);

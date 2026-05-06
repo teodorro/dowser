@@ -16,12 +16,10 @@ export default function StatusBar() {
   const spectrumWidths = useAttributesStore.use.spectrumWidths();
   const qualityFactors = useAttributesStore.use.qualityFactors();
   const coherence = useAttributesStore.use.coherence();
-  const attributesMode = useUiStore.use.attributesMode();
+  const viewMode = useUiStore.use.viewMode();
   const dx = useBscanStore.use.dx();
   const dt = useBscanStore.use.dt();
   const velocity = useBscanStore.use.velocity();
-
-  const fftMode = useUiStore.use.fftMode();
 
   const [freqs, setFreqs] = useState<number[]>([]);
 
@@ -79,7 +77,7 @@ export default function StatusBar() {
         x: {indexAscan == null ? '' : Math.round(indexAscan * dx * 100) / 100}
       </Typography>
 
-      {!fftMode && (
+      {viewMode.type !== 'fft' && (
         <Typography
           sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
         >
@@ -87,7 +85,7 @@ export default function StatusBar() {
         </Typography>
       )}
 
-      {!fftMode && (
+      {viewMode.type !== 'fft' && (
         <Typography
           sx={{ color: '#444', px: 1, width: '5em', textAlign: 'left' }}
         >
@@ -95,7 +93,7 @@ export default function StatusBar() {
           {indexT == null ? '' : Math.round(indexT * dt * velocity * 100) / 100}
         </Typography>
       )}
-      {fftMode && (
+      {viewMode.type === 'fft' && (
         <Typography
           sx={{ color: '#444', px: 1, width: '7em', textAlign: 'left' }}
         >
@@ -103,7 +101,7 @@ export default function StatusBar() {
         </Typography>
       )}
 
-      {!attributesMode && (
+      {viewMode.type !== 'attributes' && (
         <Typography
           sx={{ color: '#444', px: 1, width: '10em', textAlign: 'left' }}
         >
@@ -111,7 +109,7 @@ export default function StatusBar() {
         </Typography>
       )}
 
-      {attributesMode && (
+      {viewMode.type === 'attributes' && (
         <Typography
           sx={{ color: '#444', px: 1, width: '10em', textAlign: 'left' }}
         >

@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import useBscanStore from '../../stores/bscan-store';
@@ -7,6 +7,15 @@ import getPalette from '../get-palette';
 import useVisualSettingsStore from '../../stores/visual-settings-store';
 import unreachable from '../../utils/unreachable';
 import useUiStore from '../../stores/ui-store';
+import { showError } from '../../utils/show-error';
+import useChartViewExportStore from '../../stores/chart-view-export-store';
+import { bitmapToPngDataUrl, downloadTextFile } from '../../export-data/shared';
+import {
+  attributesViewSvgFilename,
+  buildAttributesViewSvgString,
+} from '../../export-data/export-attributes-svg';
+import { Start, ZoomOutMapOutlined } from '@mui/icons-material';
+import type { FrequenciesWindow } from '../../types/attributes-types';
 
 const clamp = (v: number, a: number, b: number) => {
   return Math.max(a, Math.min(b, v));
@@ -37,6 +46,7 @@ export default function AttributesScan() {
   const setQualityFactors = useAttributesStore.use.setQualityFactors();
   const setCoherence = useAttributesStore.use.setCoherence();
   const setScanToShow = useAttributesStore.use.setScanToShow();
+  const setFrequencies = useAttributesStore.use.setFrequencies();
 
   const selectedPaletteAttributes =
     useVisualSettingsStore.use.selectedPaletteAttributes();
@@ -88,6 +98,69 @@ export default function AttributesScan() {
     return () => ro.disconnect();
   }, []);
 
+  const setChartViewExportHandler =
+    useChartViewExportStore.use.setChartViewExportHandler();
+
+  useEffect(() => {
+    const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
+
+    const handler = async () => {
+      const canvas = canvasRef.current;
+      const bmp = bitmapRef.current;
+      if (!canvas || !bmp) {
+        showError('Нет изображения атрибутов для экспорта');
+        return;
+      }
+      const { bscan, dx, dt, velocity } = useBscanStore.getState();
+      if (!bscan.length) {
+        showError('Нет данных по атрибутам');
+        return;
+      }
+
+      const cssW = canvas.clientWidth;
+      const cssH = canvas.clientHeight;
+      const vp = {
+        x: ruler.left,
+        y: ruler.top,
+        w: cssW - ruler.left - ruler.right,
+        h: cssH - ruler.top - ruler.bottom,
+      };
+
+      const { rows, cols } = dims;
+      if (!rows || !cols) {
+        showError('Нет данных B-scan');
+        return;
+      }
+
+      try {
+        const heatmapPngDataUrl = await bitmapToPngDataUrl(bmp);
+        const svg = buildAttributesViewSvgString({
+          cssW,
+          cssH,
+          ruler,
+          vp,
+          scale,
+          tx,
+          ty,
+          cols,
+          rows,
+          heatmapPngDataUrl,
+          bscan,
+          dx,
+          dt,
+          velocity,
+        });
+        const baseName = useUiStore.getState().filename;
+        downloadTextFile(svg, attributesViewSvgFilename(baseName));
+      } catch (e) {
+        showError(`Ошибка экспорта: ${(e as Error).message}`);
+      }
+    };
+
+    setChartViewExportHandler(handler);
+    return () => setChartViewExportHandler(null);
+  }, [scale, tx, ty, dims.rows, dims.cols, setChartViewExportHandler]);
+
   useEffect(() => {
     const worker = new Worker(
       new URL('../attributes/attributes-worker.ts', import.meta.url),
@@ -101,19 +174,22 @@ export default function AttributesScan() {
           | 'spectrumWidths'
           | 'qualityFactors'
           | 'coherence';
-        result: number[][];
+        result: {
+          result: number[][];
+          windowFrequencies: FrequenciesWindow[][];
+        };
       }>,
     ) => {
       if (e.data.type === 'peakFrequencies') {
-        setPeakFrequencies(e.data.result);
+        setPeakFrequencies(e.data.result.result);
       } else if (e.data.type === 'spectrumWidths') {
-        setSpectrumWidths(e.data.result);
+        setSpectrumWidths(e.data.result.result);
       } else if (e.data.type === 'qualityFactors') {
-        setQualityFactors(e.data.result);
+        setQualityFactors(e.data.result.result);
       } else if (e.data.type === 'coherence') {
-        setCoherence(e.data.result);
+        setCoherence(e.data.result.result);
       }
-
+      setFrequencies(e.data.result.windowFrequencies);
       setIsLoading(false);
     };
 
@@ -637,6 +713,19 @@ export default function AttributesScan() {
     });
   };
 
+  const resetFullPosition = () => {
+    setTx(0);
+    setTy(0);
+  };
+
+  const canShowFullReset = tx !== 0 || ty !== 0;
+
+  const resetVerticalPosition = () => {
+    setTy(0);
+  };
+
+  const canShowVerticalReset = ty !== 0;
+
   return (
     <Box
       sx={{
@@ -655,6 +744,47 @@ export default function AttributesScan() {
           background: '#fff',
         }}
       />
+      <IconButton
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          opacity: 0,
+          margin: 0.5,
+          pointerEvents: canShowFullReset ? 'auto' : 'none',
+          transition: 'opacity 120ms ease',
+          ...(canShowFullReset && {
+            '&:hover': {
+              opacity: 1,
+            },
+          }),
+          color: 'grey',
+        }}
+        onClick={resetFullPosition}
+      >
+        <ZoomOutMapOutlined></ZoomOutMapOutlined>
+      </IconButton>
+      <IconButton
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          opacity: 0,
+          margin: 0.5,
+          pointerEvents: canShowVerticalReset ? 'auto' : 'none',
+          transition: 'opacity 120ms ease',
+          ...(canShowVerticalReset && {
+            '&:hover': {
+              opacity: 1,
+            },
+          }),
+          color: 'grey',
+          rotate: '90deg',
+        }}
+        onClick={resetVerticalPosition}
+      >
+        <Start></Start>
+      </IconButton>
     </Box>
   );
 }

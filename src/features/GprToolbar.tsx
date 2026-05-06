@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Loupe,
   Palette,
+  SaveAlt,
   WidthNormal,
   WidthWide,
 } from '@mui/icons-material';
@@ -23,6 +24,7 @@ import { useShallow } from 'zustand/shallow';
 import { showError } from '../utils/show-error';
 import { useEffect, useState } from 'react';
 import useBscanStore from '../stores/bscan-store';
+import useChartViewExportStore from '../stores/chart-view-export-store';
 import TabType from '../types/tab-type';
 import useVisualSettingsStore from '../stores/visual-settings-store';
 
@@ -52,14 +54,14 @@ export default function GprToolbar() {
   const ascanHidden = useUiStore.use.ascanHidden();
   const filename = useUiStore.use.filename();
 
-  const fftMode = useUiStore.use.fftMode();
-  const attributesMode = useUiStore.use.attributesMode();
-  const setFftMode = useUiStore.use.setFftMode();
+  const viewMode = useUiStore.use.viewMode();
+  const setViewMode = useUiStore.use.setViewMode();
   const setAscanHidden = useUiStore.use.setAscanHidden();
   const setActiveTab = useUiStore.use.setActiveTab();
 
   const bscanFullAmp = useBscanStore.use.bscanFullAmp();
   const setBscan = useBscanStore.use.setBscan();
+  const runBscanViewExport = useChartViewExportStore.use.runChartViewExport();
 
   const selectedPalette = useVisualSettingsStore.use.selectedPalette();
   const selectedPaletteSpectrum =
@@ -90,15 +92,15 @@ export default function GprToolbar() {
   useEffect(() => {
     clearUndoRedo();
     setBscan(bscanFullAmp);
-    setFftMode(false);
-  }, [bscanFullAmp]);
+    setViewMode({ type: 'bscan' });
+  }, [bscanFullAmp, clearUndoRedo, setBscan, setViewMode]);
 
   useEffect(() => {
-    if (attributesMode) {
+    if (viewMode.type === 'attributes') {
       setSelectedIndex(
         paletteOptions.findIndex((p) => p.value === selectedPaletteAttributes),
       );
-    } else if (fftMode) {
+    } else if (viewMode.type === 'fft') {
       setSelectedIndex(
         paletteOptions.findIndex((p) => p.value === selectedPaletteSpectrum),
       );
@@ -108,11 +110,11 @@ export default function GprToolbar() {
       );
     }
   }, [
-    fftMode,
-    attributesMode,
+    viewMode,
     selectedPalette,
     selectedPaletteAttributes,
     selectedPaletteSpectrum,
+    paletteOptions,
   ]);
 
   const onLoadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,9 +138,9 @@ export default function GprToolbar() {
 
   const handleMenuPaletteItemClick = (index: number) => {
     setSelectedIndex(index);
-    if (attributesMode) {
+    if (viewMode.type === 'attributes') {
       setSelectedPaletteAttributes(paletteOptions[index].value);
-    } else if (fftMode) {
+    } else if (viewMode.type === 'fft') {
       setSelectedPaletteSpectrum(paletteOptions[index].value);
     } else {
       setSelectedPalette(paletteOptions[index].value);
@@ -181,6 +183,24 @@ export default function GprToolbar() {
             />
           </IconButton>
 
+          {
+            <IconButton
+              size="small"
+              edge="start"
+              color="inherit"
+              aria-label="export current view as svg"
+              disabled={bscanFullAmp.length === 0}
+              sx={{ m: '0.1em' }}
+              onClick={() => {
+                void runBscanViewExport().catch((err) => {
+                  showError(`Ошибка экспорта: ${(err as Error).message}`);
+                });
+              }}
+            >
+              <SaveAlt />
+            </IconButton>
+          }
+
           <UndoRedo></UndoRedo>
 
           <IconButton
@@ -217,23 +237,25 @@ export default function GprToolbar() {
             ))}
           </Menu>
 
-          {!fftMode && !attributesMode && (
-            <IconButton
-              component="label"
-              size="small"
-              edge="start"
-              color="inherit"
-              aria-label="logarithm"
-              sx={{
-                m: '0.1em',
-                border: logAmplitudeSelected2
-                  ? '2px solid #fff'
-                  : '2px solid #ffffff00',
-              }}
-              onClick={() => setLogAmplitudeSelected2(!logAmplitudeSelected2)}
-            >
-              <Loupe></Loupe>
-            </IconButton>
+          {viewMode.type !== 'fft' && viewMode.type !== 'attributes' && (
+            <>
+              <IconButton
+                component="label"
+                size="small"
+                edge="start"
+                color="inherit"
+                aria-label="logarithm"
+                sx={{
+                  m: '0.1em',
+                  border: logAmplitudeSelected2
+                    ? '2px solid #fff'
+                    : '2px solid #ffffff00',
+                }}
+                onClick={() => setLogAmplitudeSelected2(!logAmplitudeSelected2)}
+              >
+                <Loupe></Loupe>
+              </IconButton>
+            </>
           )}
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {filename}

@@ -10,10 +10,14 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import useBscanStore from '../../stores/bscan-store';
 import useUiStore from '../../stores/ui-store';
-import { AttributesModeType } from '../../types/attributes-types';
+import {
+  AttributesModeType,
+  type FrequenciesWindow,
+} from '../../types/attributes-types';
 import useAttributesStore from '../../stores/attributes-store';
 import { PlayCircle } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
+import WindowSpectrum from '../attributes/WindowSpectrum';
 
 export default function AttributesAnalysis() {
   const bscan = useBscanStore.use.bscan();
@@ -28,9 +32,9 @@ export default function AttributesAnalysis() {
   const setCoherence = useAttributesStore.use.setCoherence();
   const setWindowSize = useAttributesStore.use.setWindowSize();
   const setSelectedAttribute = useAttributesStore.use.setSelectedAttribute();
+  const setFrequencies = useAttributesStore.use.setFrequencies();
 
-  const setAttributesModeType = useUiStore.use.setAttributesModeType();
-  const setAttributesMode = useUiStore.use.setAttributesMode();
+  const setViewMode = useUiStore.use.setViewMode();
   const setIsLoading = useUiStore.use.setIsLoading();
 
   const workerRef = useRef<Worker | null>(null);
@@ -39,8 +43,10 @@ export default function AttributesAnalysis() {
 
   useEffect(() => {
     setWindow(windowSize);
-    setAttributesMode(true);
-    setAttributesModeType(AttributesModeType.PeakFrequencies);
+    setViewMode({
+      type: 'attributes',
+      mode: AttributesModeType.PeakFrequencies,
+    });
 
     const worker = new Worker(
       new URL('../attributes/attributes-worker.ts', import.meta.url),
@@ -54,18 +60,22 @@ export default function AttributesAnalysis() {
           | 'spectrumWidths'
           | 'qualityFactors'
           | 'coherence';
-        result: number[][];
+        result: {
+          result: number[][];
+          windowFrequencies: FrequenciesWindow[][];
+        };
       }>,
     ) => {
       if (e.data.type === 'peakFrequencies') {
-        setPeakFrequencies(e.data.result);
+        setPeakFrequencies(e.data.result.result);
       } else if (e.data.type === 'spectrumWidths') {
-        setSpectrumWidths(e.data.result);
+        setSpectrumWidths(e.data.result.result);
       } else if (e.data.type === 'qualityFactors') {
-        setQualityFactors(e.data.result);
+        setQualityFactors(e.data.result.result);
       } else if (e.data.type === 'coherence') {
-        setCoherence(e.data.result);
+        setCoherence(e.data.result.result);
       }
+      setFrequencies(e.data.result.windowFrequencies);
 
       setIsLoading(false);
     };
@@ -73,7 +83,6 @@ export default function AttributesAnalysis() {
     workerRef.current = worker;
 
     return () => {
-      setAttributesMode(false);
       worker.terminate();
       workerRef.current = null;
     };
@@ -121,7 +130,10 @@ export default function AttributesAnalysis() {
     runAnalysis(attribute);
   };
 
-  const handleRunAnalysisButtonClick = () => {
+  const handleRunAnalysisButtonClick = (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
     setWindowSize(window);
   };
 
@@ -133,46 +145,63 @@ export default function AttributesAnalysis() {
       }}
     >
       <Box sx={{ p: 0.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton
-            aria-label="run-analysis"
-            sx={{ m: '0.1em' }}
-            onClick={() => handleRunAnalysisButtonClick()}
-          >
-            <PlayCircle></PlayCircle>
-          </IconButton>
-          <TextField
-            id="window"
-            label="Размер окна"
-            value={window}
-            variant="standard"
-            type="number"
-            inputProps={{ step: 1, min: 1 }}
-            onChange={(e) => setWindow(getNotNaNValue(e.target.value, 0))}
-            error={!isLowStopFreqValid(window)}
-            helperText={getLowStopFreqHelperText(window)}
-            sx={{ display: 'flex', margin: '0.5em' }}
-          />
-        </Box>
-        <FormControl
-          fullWidth
-          sx={{ padding: '0.5em', mt: '1em', size: 'small' }}
+        <form
+          style={{
+            display: 'flex',
+            alignItems: 'start',
+            flexDirection: 'column',
+          }}
+          onSubmit={(event) => handleRunAnalysisButtonClick(event)}
         >
-          <InputLabel id="select-attribute-label">Атрибут</InputLabel>
-          <Select
-            labelId="select-attribute-label"
-            id="select-attribute"
-            value={selectedAttribute}
-            label="Атрибут"
-            onChange={handleChangeAttribute}
-            size="small"
+          <Box sx={{ display: 'flex', alignItems: 'start', width: '100%' }}>
+            <IconButton
+              aria-label="run-analysis"
+              sx={{ m: '0.1em', mt: '0.5em' }}
+              type="submit"
+            >
+              <PlayCircle></PlayCircle>
+            </IconButton>
+            <TextField
+              id="window"
+              label="Размер окна"
+              value={window}
+              variant="standard"
+              type="number"
+              inputProps={{ step: 1, min: 1 }}
+              onChange={(e) => setWindow(getNotNaNValue(e.target.value, 0))}
+              error={!isLowStopFreqValid(window)}
+              helperText={getLowStopFreqHelperText(window)}
+              sx={{ display: 'flex', margin: '0.5em', flexGrow: 1 }}
+            />
+          </Box>
+          <FormControl
+            fullWidth
+            sx={{
+              mt: '1em',
+              size: 'small',
+              display: 'flex',
+            }}
           >
-            <MenuItem value="peakFrequencies">Пиковая частота</MenuItem>
-            <MenuItem value="spectrumWidths">Спектральная ширина</MenuItem>
-            <MenuItem value="qualityFactors">Добротность</MenuItem>
-            <MenuItem value="coherence">Когерентность</MenuItem>
-          </Select>
-        </FormControl>
+            <InputLabel id="select-attribute-label" sx={{ m: '0.5em' }}>
+              Атрибут
+            </InputLabel>
+            <Select
+              labelId="select-attribute-label"
+              id="select-attribute"
+              value={selectedAttribute}
+              label="Атрибут"
+              onChange={handleChangeAttribute}
+              size="small"
+              sx={{ m: '0.5em', display: 'flex', flexGrow: 1 }}
+            >
+              <MenuItem value="peakFrequencies">Пиковая частота</MenuItem>
+              <MenuItem value="spectrumWidths">Спектральная ширина</MenuItem>
+              <MenuItem value="qualityFactors">Добротность</MenuItem>
+              <MenuItem value="coherence">Когерентность</MenuItem>
+            </Select>
+          </FormControl>
+        </form>
+        <WindowSpectrum />
       </Box>
     </Box>
   );

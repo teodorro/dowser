@@ -1,14 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import useBscanStore from '../stores/bscan-store';
-import useVisualSettingsStore from '../stores/visual-settings-store';
-import { logAmplitude } from '../processing/visual-processing/log-amplitude';
-import getPalette from './get-palette';
-import { Box } from '@mui/material';
-import * as d3 from 'd3';
-
-const clamp = (v: number, a: number, b: number) => {
-  return Math.max(a, Math.min(b, v));
-};
+import useBscanStore from '../../stores/bscan-store';
+import useVisualSettingsStore from '../../stores/visual-settings-store';
+import { logAmplitude } from '../../processing/visual-processing/log-amplitude';
+import getPalette from '../get-palette';
+import { Box, IconButton } from '@mui/material';
+import useChartViewExportStore from '../../stores/chart-view-export-store';
+import useUiStore from '../../stores/ui-store';
+import { showError } from '../../utils/show-error';
+import {
+  bscanViewSvgFilename,
+  buildBscanViewSvgString,
+} from '../../export-data/export-bscan-svg';
+import { downloadTextFile, bitmapToPngDataUrl } from '../../export-data/shared';
+import { Start, ZoomOutMapOutlined } from '@mui/icons-material';
+import clamp from '../../shared/clamp';
+import { drawRulers } from './draw-rulers';
+import type { Nullable } from '../../types/utility-types';
 
 export default function BscanCanvas() {
   const DEFAULT_SCALE = 2;
@@ -18,12 +25,14 @@ export default function BscanCanvas() {
   const dt = useBscanStore.use.dt();
   const velocity = useBscanStore.use.velocity();
   const dx = useBscanStore.use.dx();
+  const valueRange = useBscanStore.use.valueRange();
 
   const setBscanToShow = useBscanStore.use.setBscanToShow();
   const setIndexAscan = useBscanStore.use.setIndexAscan();
   const setIndexT = useBscanStore.use.setIndexT();
+  const setValueRange = useBscanStore.use.setValueRange();
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasRef = useRef<Nullable<HTMLCanvasElement>>(null);
   const redrawRef = useRef<() => void>(() => {});
 
   const [scale, setScale] = useState(DEFAULT_SCALE);
@@ -33,13 +42,8 @@ export default function BscanCanvas() {
   const lastX = useRef<number>(0);
   const lastY = useRef<number>(0);
 
-  const [valueRange, setValueRange] = useState<{
-    min: number;
-    max: number;
-  } | null>(null);
-
   // Build an ImageBitmap once per bscan (fast to draw).
-  const bitmapRef = useRef<ImageBitmap | null>(null);
+  const bitmapRef = useRef<Nullable<ImageBitmap>>(null);
   const dims = useMemo(() => {
     const cols = bscanToShow.length;
     const rows = cols ? bscanToShow[0].length : 0;
@@ -73,6 +77,69 @@ export default function BscanCanvas() {
     return () => ro.disconnect();
   }, []);
 
+  const setChartViewExportHandler =
+    useChartViewExportStore.use.setChartViewExportHandler();
+
+  useEffect(() => {
+    const ruler = { left: 56, top: 46, right: 66, bottom: 0 };
+
+    const handler = async () => {
+      const canvas = canvasRef.current;
+      const bmp = bitmapRef.current;
+      if (!canvas || !bmp) {
+        showError('Нет изображения B-scan для экспорта');
+        return;
+      }
+      const { bscan, dx, dt, velocity } = useBscanStore.getState();
+      if (!bscan.length) {
+        showError('Нет данных B-scan');
+        return;
+      }
+
+      const cssW = canvas.clientWidth;
+      const cssH = canvas.clientHeight;
+      const vp = {
+        x: ruler.left,
+        y: ruler.top,
+        w: cssW - ruler.left - ruler.right,
+        h: cssH - ruler.top - ruler.bottom,
+      };
+
+      const { rows, cols } = dims;
+      if (!rows || !cols) {
+        showError('Нет данных B-scan');
+        return;
+      }
+
+      try {
+        const heatmapPngDataUrl = await bitmapToPngDataUrl(bmp);
+        const svg = buildBscanViewSvgString({
+          cssW,
+          cssH,
+          ruler,
+          vp,
+          scale,
+          tx,
+          ty,
+          cols,
+          rows,
+          heatmapPngDataUrl,
+          bscan,
+          dx,
+          dt,
+          velocity,
+        });
+        const baseName = useUiStore.getState().filename;
+        downloadTextFile(svg, bscanViewSvgFilename(baseName));
+      } catch (e) {
+        showError(`Ошибка экспорта: ${(e as Error).message}`);
+      }
+    };
+
+    setChartViewExportHandler(handler);
+    return () => setChartViewExportHandler(null);
+  }, [scale, tx, ty, dims.rows, dims.cols, setChartViewExportHandler]);
+
   useEffect(() => {
     lastX.current = 0;
     lastY.current = 0;
@@ -91,7 +158,7 @@ export default function BscanCanvas() {
       data = logAmplitude(data);
     }
     setBscanToShow(data);
-  }, [bscan, logAmplitudeSelected, logAmplitudeSelected2]);
+  }, [bscan, logAmplitudeSelected, logAmplitudeSelected2, setBscanToShow]);
 
   useEffect(() => {
     if (!bscanToShow.length) return;
@@ -106,7 +173,7 @@ export default function BscanCanvas() {
       ),
     );
     setValueRange({ min, max });
-  }, [bscanToShow]);
+  }, [bscanToShow, setValueRange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -179,7 +246,7 @@ export default function BscanCanvas() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bscanToShow, dims.rows, dims.cols, valueRange, lut]);
+  }, [dims.rows, dims.cols, valueRange, lut]);
 
   // Redraw when view changes
   useEffect(() => {
@@ -308,7 +375,7 @@ export default function BscanCanvas() {
     }
     ctx.restore();
 
-    drawRulers(ctx);
+    drawRulers(ctx, bscanToShow, vpRef, tx, ty, scale, dx, dt, velocity, ruler);
   };
 
   redrawRef.current = redraw;
@@ -339,223 +406,18 @@ export default function BscanCanvas() {
     return { col, row, wx, wy, px, py };
   };
 
-  const drawRulers = (ctx: CanvasRenderingContext2D) => {
-    if (bscan == null || bscan.length === 0) return;
-    const vp = vpRef.current;
-    const rows = bscan[0].length;
-    const cols = bscan.length;
-
-    const wyMin = clamp((0 - ty) / scale, 0, rows);
-    const wyMax = clamp((vp.h - ty) / scale, 0, rows);
-    const wxMin = clamp((0 - tx) / scale, 0, cols);
-    const wxMax = clamp((vp.w - tx) / scale, 0, cols);
-
-    drawTimeRuler(ctx, wyMin, wyMax);
-    drawLengthRuler(ctx, wxMin, wxMax);
-    drawDepthRuler(ctx, wyMin, wyMax);
+  const resetFullPosition = () => {
+    setTx(0);
+    setTy(0);
   };
 
-  const drawLengthRuler = (
-    ctx: CanvasRenderingContext2D,
-    wxMin: number,
-    wxMax: number,
-  ) => {
-    const rows = bscan.length;
-    const vp = vpRef.current;
-    const xVisMin = wxMin * dx;
-    const xVisMax = wxMax * dx;
+  const canShowFullReset = tx !== 0 || ty !== 0;
 
-    const minLabelPx = 131;
-    const maxTicks = Math.max(2, Math.floor(vp.w / minLabelPx));
-    const ticks = d3.ticks(xVisMin, xVisMax, maxTicks);
-    const step = d3.tickStep(xVisMin, xVisMax, maxTicks);
-    let decimals = Math.max(0, -Math.floor(Math.log10(step)));
-    if (!Number.isFinite(decimals)) {
-      decimals = 1;
-    }
-    const fmx = d3.format(`.${decimals}f`);
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(vp.x, 0, vp.w, ruler.top);
-
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 1;
-
-    const xToWx = d3
-      .scaleLinear()
-      .domain([0, rows * dx])
-      .range([0, rows]);
-
-    ctx.beginPath();
-    ctx.moveTo(wxMin * scale + tx + ruler.left, ruler.top - 3);
-    ctx.lineTo(wxMax * scale + tx + ruler.left, ruler.top - 3);
-    ctx.stroke();
-
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#444';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    ctx.fillText(
-      'Длина, м',
-      ((wxMax - wxMin) / 2 + wxMin) * scale + tx + ruler.left,
-      ruler.top - 35,
-    );
-
-    for (const t of ticks) {
-      const wx = xToWx(t);
-      const x = vp.x + (wx * scale + tx);
-      const label = fmx(t);
-
-      if (x < vp.x || x > vp.x + vp.w) continue;
-
-      ctx.beginPath();
-      ctx.moveTo(x, ruler.top - 8);
-      ctx.lineTo(x, ruler.top - 3);
-      ctx.stroke();
-
-      ctx.font = '12px Arial';
-      ctx.fillStyle = '#444';
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, x, ruler.top - 16);
-    }
+  const resetVerticalPosition = () => {
+    setTy(0);
   };
 
-  const drawTimeRuler = (
-    ctx: CanvasRenderingContext2D,
-    wyMin: number,
-    wyMax: number,
-  ) => {
-    const rows = bscan[0].length;
-    const vp = vpRef.current;
-    const tVisMin = wyMin * dt;
-    const tVisMax = wyMax * dt;
-
-    const minLabelPx = 24;
-    const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
-    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
-    const step = d3.tickStep(tVisMin, tVisMax, maxTicks);
-    let decimals = Math.max(0, -Math.floor(Math.log10(step)));
-    if (!Number.isFinite(decimals)) {
-      decimals = 1;
-    }
-    const fmt = d3.format(`.${decimals}f`);
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, vp.y, ruler.left, vp.h);
-
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 1;
-
-    const tToWy = d3
-      .scaleLinear()
-      .domain([0, rows * dt])
-      .range([0, rows]);
-
-    ctx.beginPath();
-    ctx.moveTo(ruler.left - 3, wyMin * scale + ty + ruler.top);
-    ctx.lineTo(ruler.left - 3, wyMax * scale + ty + ruler.top);
-    ctx.stroke();
-
-    ctx.save();
-    const x = 12;
-    const y = ((wyMax - wyMin) / 2 + wyMin) * scale - 40 + ty + ruler.top;
-    ctx.translate(x, y);
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#444';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'end';
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Время, нс', 0, 0);
-    ctx.restore();
-
-    for (const t of ticks) {
-      const wy = tToWy(t);
-      const y = vp.y + (wy * scale + ty);
-      const label = fmt(t);
-
-      if (y < vp.y || y > vp.y + vp.h) continue;
-
-      ctx.beginPath();
-      ctx.moveTo(ruler.left - 8, y);
-      ctx.lineTo(ruler.left - 3, y);
-      ctx.stroke();
-
-      ctx.font = '12px Arial';
-      ctx.fillStyle = '#444';
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'end';
-      ctx.fillText(label, ruler.left - 10, y);
-    }
-  };
-
-  const drawDepthRuler = (
-    ctx: CanvasRenderingContext2D,
-    wyMin: number,
-    wyMax: number,
-  ) => {
-    const rows = bscan[0].length;
-    const vp = vpRef.current;
-    const tVisMin = (wyMin * dt * velocity) / 2;
-    const tVisMax = (wyMax * dt * velocity) / 2;
-
-    const minLabelPx = 34;
-    const maxTicks = Math.max(2, Math.floor(vp.h / minLabelPx));
-    const ticks = d3.ticks(tVisMin, tVisMax, maxTicks);
-    const step = d3.tickStep(tVisMin, tVisMax, maxTicks);
-    let decimals = Math.max(0, -Math.floor(Math.log10(step)));
-    if (!Number.isFinite(decimals)) {
-      decimals = 1;
-    }
-    const fmt = d3.format(`.${decimals}f`);
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(vp.x + vp.w, vp.y, ruler.right, vp.h);
-
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 1;
-
-    const tToWy = d3
-      .scaleLinear()
-      .domain([0, (rows * dt * velocity) / 2])
-      .range([0, rows]);
-
-    ctx.beginPath();
-    ctx.moveTo(vp.w + ruler.left + 3, wyMin * scale + ty + ruler.top);
-    ctx.lineTo(vp.w + ruler.left + 3, wyMax * scale + ty + ruler.top);
-    ctx.stroke();
-
-    ctx.save();
-    const x = vp.w + ruler.left + 50;
-    const y = ((wyMax - wyMin) / 2 + wyMin) * scale - 40 + ty + ruler.top;
-    ctx.translate(x, y);
-    ctx.font = '12px Arial';
-    ctx.fillStyle = '#444';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'end';
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('Глубина, м', 0, 0);
-    ctx.restore();
-
-    for (const t of ticks) {
-      const wy = tToWy(t);
-      const y = vp.y + (wy * scale + ty);
-      const label = fmt(t);
-
-      if (y < vp.y || y > vp.y + vp.h) continue;
-
-      ctx.beginPath();
-      ctx.moveTo(vp.w + ruler.left + 8, y);
-      ctx.lineTo(vp.w + ruler.left + 3, y);
-      ctx.stroke();
-
-      ctx.font = '12px Arial';
-      ctx.fillStyle = '#444';
-      ctx.textBaseline = 'middle';
-      ctx.textAlign = 'start';
-      ctx.fillText(label, vp.w + ruler.left + 15, y);
-    }
-  };
+  const canShowVerticalReset = ty !== 0;
 
   return (
     <Box
@@ -571,10 +433,51 @@ export default function BscanCanvas() {
           width: '100%',
           height: '100%',
           display: 'block',
-          cursor: 'grab',
+          cursor: 'crosshair',
           background: '#fff',
         }}
       />
+      <IconButton
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          opacity: 0,
+          margin: 0.5,
+          pointerEvents: canShowFullReset ? 'auto' : 'none',
+          transition: 'opacity 120ms ease',
+          ...(canShowFullReset && {
+            '&:hover': {
+              opacity: 1,
+            },
+          }),
+          color: 'grey',
+        }}
+        onClick={resetFullPosition}
+      >
+        <ZoomOutMapOutlined></ZoomOutMapOutlined>
+      </IconButton>
+      <IconButton
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          opacity: 0,
+          margin: 0.5,
+          pointerEvents: canShowVerticalReset ? 'auto' : 'none',
+          transition: 'opacity 120ms ease',
+          ...(canShowVerticalReset && {
+            '&:hover': {
+              opacity: 1,
+            },
+          }),
+          color: 'grey',
+          rotate: '90deg',
+        }}
+        onClick={resetVerticalPosition}
+      >
+        <Start></Start>
+      </IconButton>
     </Box>
   );
 }

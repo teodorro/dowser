@@ -6,17 +6,15 @@ import Settings from './features/Settings';
 import useUiStore from './stores/ui-store';
 import ErrorNotification from './components/ErrorNotification';
 import BscanFftCanvas from './features/BScanFftCanvas';
-import BscanCanvas from './features/BScanCanvas';
+import BscanCanvas from './features/b-scan/BScanCanvas';
 import StatusBar from './features/StatusBar';
 import useBscanStore from './stores/bscan-store';
-import { AttributesModeType } from './types/attributes-types';
 import AttributesScan from './features/attributes/AttributesScan';
+import Palette from './features/Palette';
 
 function App() {
   const ascanHidden = useUiStore.use.ascanHidden();
-  const fftMode = useUiStore.use.fftMode();
-  const attributesMode = useUiStore.use.attributesMode();
-  const attributesModeType = useUiStore.use.attributesModeType();
+  const viewMode = useUiStore.use.viewMode();
   const isLoading = useUiStore.use.isLoading();
 
   const isDataLoaded = useBscanStore.use.bscanFullAmp().length > 0;
@@ -60,13 +58,23 @@ function App() {
                 flexDirection: 'row',
               }}
             >
-              {!fftMode && !attributesMode && <BscanCanvas></BscanCanvas>}
-              {fftMode && !attributesMode && <BscanFftCanvas></BscanFftCanvas>}
-              {attributesMode &&
-                attributesModeType === AttributesModeType.PeakFrequencies && (
-                  <AttributesScan></AttributesScan>
-                )}
-              {!ascanHidden && <Ascan></Ascan>}
+              {viewMode.type === 'bscan' && <BscanCanvas></BscanCanvas>}
+              {viewMode.type === 'fft' && <BscanFftCanvas></BscanFftCanvas>}
+              {viewMode.type === 'attributes' && (
+                <AttributesScan></AttributesScan>
+              )}
+              {!ascanHidden && (
+                <Box
+                  sx={{
+                    width: '250px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <Ascan></Ascan>
+                  <Palette></Palette>
+                </Box>
+              )}
             </Box>
             <StatusBar></StatusBar>
           </Box>

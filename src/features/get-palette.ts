@@ -34,4 +34,25 @@ const makeLut256 = (interp: (t: number) => string): Uint8ClampedArray => {
   return lut;
 };
 
+export const getPaletteRaw = (palette: string): ((t: number) => string) => {
+  switch (palette) {
+    case 'greys':
+      return d3.interpolateGreys;
+    case 'viridis':
+      return d3.interpolateViridis;
+    case 'turbo':
+      return d3.interpolateTurbo;
+    case 'spectral':
+      return d3.interpolateSpectral;
+    case 'cubehelix':
+      return d3.interpolateCubehelixDefault;
+    case 'magma':
+      return d3.interpolateMagma;
+    case 'rainbow':
+      return d3.interpolateRainbow;
+    default:
+      return d3.interpolateGreys;
+  }
+};
+
 export default getPalette;
